@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Планировщик команды</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0f0f13;--surf:#1a1a22;--surf2:#22222e;--brd:#2e2e3e;
+  --acc:#6c63ff;--acc-s:rgba(108,99,255,.15);
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;
+  --txt:#e8e8f0;--muted:#7070a0;--r:12px;
+  --font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --fs:15px;
+}
+[data-theme=light]{--bg:#f4f4f8;--surf:#fff;--surf2:#f0f0f5;--brd:#dddde8;--txt:#1a1a2e;--muted:#8080a0}
+[data-theme=warm]{--bg:#1a1208;--surf:#241a0c;--surf2:#2e2010;--brd:#3e300a;--acc:#f59e0b;--acc-s:rgba(245,158,11,.15);--txt:#f5e6c8;--muted:#9a8060}
+[data-theme=ocean]{--bg:#071520;--surf:#0d2030;--surf2:#122840;--brd:#1e3850;--acc:#22d3ee;--acc-s:rgba(34,211,238,.15);--txt:#e0f4ff;--muted:#5090b0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var(--fs);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:0}
+
+/* LOGIN */
+#loginWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;gap:12px;text-align:center}
+.l-icon{font-size:48px}.l-title{font-size:22px;font-weight:800}.l-sub{font-size:13px;color:var(--muted);line-height:1.5}
+.fi,.fs,.fta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:10px;color:var(--txt);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none;max-width:300px}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--acc)}
+.fta{resize:none;min-height:70px;line-height:1.5;max-width:100%}
+.fs option{background:#1a1a22}
+.btn{padding:12px 20px;border:none;border-radius:11px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;width:100%;max-width:300px}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--acc);color:#fff}
+.btn-s{background:var(--surf2);color:var(--muted)}
+.btn-d{background:rgba(248,113,113,.15);color:var(--red)}
+.btn-row{display:flex;gap:7px;margin-top:12px}
+.btn-row .btn{max-width:none}
+
+/* GROUP PICKER */
+#groupWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:10px}
+.g-card{width:100%;max-width:340px;background:var(--surf);border:1.5px solid var(--brd);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border-color .2s;display:flex;align-items:center;gap:12px}
+.g-card:active{border-color:var(--acc)}
+.g-icon{font-size:24px}.g-name{font-size:15px;font-weight:700}.g-sub{font-size:11px;color:var(--muted)}
+
+/* HEADER */
+.hdr{background:var(--surf);border-bottom:1px solid var(--brd);padding:10px 14px 8px;position:sticky;top:0;z-index:100}
+.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.logo{font-size:16px;font-weight:800;letter-spacing:-.3px}.logo span{color:var(--acc)}
+.hdr-r{display:flex;gap:6px;align-items:center}
+.rbadge{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;border:1.5px solid var(--acc);color:var(--acc);background:var(--acc-s)}
+.iBtn{width:30px;height:30px;border:1px solid var(--brd);background:var(--surf2);border-radius:8px;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tabs{display:flex;gap:2px;background:var(--bg);border-radius:9px;padding:3px}
+.tab{flex:1;text-align:center;padding:5px 1px;border-radius:7px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.on{background:var(--surf2);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+/* DATE */
+.dstrip{padding:8px 14px 0;display:flex;align-items:center;justify-content:space-between}
+.dnav{display:flex;align-items:center;gap:7px}
+.dBtn{width:26px;height:26px;border:1px solid var(--brd);background:var(--surf);border-radius:7px;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dlbl{font-size:12px;font-weight:700}
+.tdBtn{font-size:11px;font-weight:600;color:var(--acc);background:var(--acc-s);border:none;border-radius:8px;padding:4px 10px;cursor:pointer}
+
+/* STATS */
+.sbar{display:flex;gap:5px;padding:8px 14px 0}
+.stat{flex:1;background:var(--surf);border:1px solid var(--brd);border-radius:9px;padding:7px 5px;text-align:center;cursor:pointer;transition:all .2s}
+.stat.af,.stat:active{border-color:var(--acc);background:var(--acc-s)}
+.snum{font-size:17px;font-weight:800;line-height:1;margin-bottom:2px}
+.slbl{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.s0 .snum{color:var(--blue)}.s1 .snum{color:var(--yellow)}.s2 .snum{color:var(--green)}
+
+/* FILTERS */
+.frow{display:flex;gap:5px;padding:7px 14px 0;overflow-x:auto;scrollbar-width:none}
+.frow::-webkit-scrollbar{display:none}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;border:1.5px solid var(--brd);color:var(--muted);background:transparent;transition:all .15s}
+.chip.on{border-color:var(--acc);color:var(--acc);background:var(--acc-s)}
+
+/* TASKS */
+.twrap{padding:8px 14px 90px}
+.glbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:8px 0 5px 2px}
+.tc{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:6px;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.tc:active{border-color:var(--acc)}.tc.tdone{opacity:.6}
+.tm{padding:10px 11px;display:flex;align-items:flex-start;gap:8px}
+.tdot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.stodo .tdot{background:var(--blue)}.sinp .tdot{background:var(--yellow);box-shadow:0 0 5px var(--yellow)}
+.sdone .tdot{background:var(--green)}.sblk .tdot{background:var(--red)}
+.tb{flex:1;min-width:0}
+.tt{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:3px;word-break:break-word}
+.tmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tass{font-size:10px;color:var(--muted)}.tpr{font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px}
+.ph{background:rgba(248,113,113,.15);color:var(--red)}.pm{background:rgba(251,191,36,.15);color:var(--yellow)}.pl{background:rgba(96,165,250,.12);color:var(--blue)}
+.tcomm,.tsub{font-size:10px;color:var(--muted)}
+.tpill{font-size:9px;font-weight:700;border-radius:5px;padding:2px 7px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ptodo{background:rgba(96,165,250,.12);color:var(--blue)}.pinp{background:rgba(251,191,36,.12);color:var(--yellow)}
+.pdone{background:rgba(52,211,153,.12);color:var(--green)}.pblk{background:rgba(248,113,113,.12);color:var(--red)}
+.sbar2{border-top:1px solid var(--brd);padding:5px 11px 7px 27px;display:flex;flex-direction:column;gap:3px}
+.sitem{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.sitem.sd{text-decoration:line-through;opacity:.6}
+.schk{width:13px;height:13px;border:1.5px solid var(--brd);border-radius:3px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;transition:all .15s}
+.schk.ck{background:var(--green);border-color:var(--green);color:#fff}
+
+/* FAB */
+.fab{position:fixed;bottom:20px;right:14px;width:48px;height:48px;background:var(--acc);border:none;border-radius:14px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(108,99,255,.5);z-index:200;transition:transform .15s}
+.fab:active{transform:scale(.91)}
+
+/* OVERLAY */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:300;display:none;align-items:flex-end}
+.ov.open{display:flex}
+.modal{background:var(--surf);border-radius:18px 18px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:16px 14px 36px;border-top:1px solid var(--brd);animation:su .25s ease}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hndl{width:34px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 12px}
+.mtitle{font-size:15px;font-weight:700;margin-bottom:14px}
+.fg{margin-bottom:11px}.fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:5px;display:block}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sopt{border:1.5px solid var(--brd);border-radius:9px;padding:8px;text-align:center;cursor:pointer;transition:all .15s;font-size:11px;font-weight:600}
+.sopt.sel{border-color:var(--acc);background:var(--acc-s);color:var(--acc)}
+.sopt .si{font-size:16px;display:block;margin-bottom:2px}
+.divhr{height:1px;background:var(--brd);margin:10px 0}
+
+/* HISTORY */
+.hfrow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.hentry{background:var(--surf2);border-radius:9px;padding:9px 11px;margin-bottom:6px;border-left:3px solid var(--acc)}
+.hwho{font-size:10px;font-weight:700;color:var(--acc);margin-bottom:2px}
+.hwhat{font-size:12px;line-height:1.4}.hwhen{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* COMMENTS */
+.clist{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.ci{background:var(--surf2);border-radius:9px;padding:8px 10px;border-left:3px solid var(--acc)}
+.cauth{font-size:10px;font-weight:700;color:var(--acc);margin-bottom:2px}
+.ctxt{font-size:12px;line-height:1.4}.ctime{font-size:9px;color:var(--muted);margin-top:2px}
+.crow{display:flex;gap:6px}
+.sndBtn{width:38px;height:38px;background:var(--acc);border:none;border-radius:8px;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* STAFF */
+.alist{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.aitem{display:flex;align-items:center;justify-content:space-between;background:var(--surf2);border-radius:9px;padding:9px 11px}
+.aname{font-size:13px;font-weight:600}.arole{font-size:10px;color:var(--muted)}
+.delbtn{background:rgba(248,113,113,.15);color:var(--red);border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer}
+
+/* SETTINGS */
+.thgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.thopt{border:2px solid var(--brd);border-radius:9px;padding:7px 3px;text-align:center;cursor:pointer;font-size:10px;font-weight:600;transition:all .15s}
+.thopt.sel{border-color:var(--acc)}
+.thsw{width:26px;height:26px;border-radius:6px;margin:0 auto 3px}
+.fntrow{display:flex;gap:7px;flex-wrap:wrap}
+.fopt{padding:6px 11px;border:1.5px solid var(--brd);border-radius:8px;font-size:11px;cursor:pointer;transition:all .15s}
+.fopt.sel{border-color:var(--acc);color:var(--acc)}
+.fszrow{display:flex;gap:7px;align-items:center}
+.fsbtn{width:32px;height:32px;border:1px solid var(--brd);background:var(--surf2);border-radius:8px;color:var(--txt);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fsval{font-size:13px;font-weight:700;min-width:36px;text-align:center}
+
+/* PARSE PREVIEW */
+.pprev{background:var(--surf2);border-radius:9px;padding:9px 11px;margin-top:8px;display:none}
+.pit{font-size:11px;padding:2px 0;display:flex;gap:5px;align-items:flex-start}
+.pit .pbadge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600;flex-shrink:0;margin-top:1px}
+.ptask{background:rgba(96,165,250,.15);color:var(--blue)}.psub{background:rgba(108,99,255,.15);color:var(--acc)}
+
+/* LOADING/EMPTY */
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:9px}
+.sp{width:28px;height:28px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.eico{font-size:34px;margin-bottom:7px}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surf);border:1px solid var(--brd);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--txt);opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ssec{margin-bottom:16px}.sstitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
+.det-row{display:flex;gap:7px;margin-bottom:7px;font-size:12px;align-items:center}
+.det-row .lbl{color:var(--muted);min-width:76px;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap" style="display:none">
+  <div class="l-icon">📋</div>
+  <div class="l-title">Планировщик команды</div>
+  <div class="l-sub">Введите имя и выберите роль.<br>Устройство запомнит вас — вход только один раз.</div>
+  <input class="fi" id="lName" placeholder="Ваше имя" maxlength="40">
+  <select class="fs" id="lRole">
+    <option value="manager">👤 Менеджер</option>
+    <option value="director">👑 Руководитель</option>
+    <option value="assistant">🛡 Ассистент</option>
+  </select>
+  <button class="btn btn-p" onclick="doLogin()">Войти →</button>
+  <div style="font-size:10px;color:var(--muted)">Изменить роль может только ассистент через вкладку «Состав»</div>
+</div>
+
+<!-- GROUP PICKER -->
+<div id="groupWrap" style="display:none">
+  <div class="l-title" style="margin-bottom:4px">Выберите группу</div>
+  <div class="l-sub" style="margin-bottom:14px">Откройте нужный планировщик</div>
+  <div id="groupList"></div>
+  <button class="btn btn-s" style="margin-top:10px" onclick="showLogin()">← Сменить пользователя</button>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="hdr">
+    <div class="hdr1">
+      <div>
+        <div class="logo">Команда<span>.</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px" id="groupName"></div>
+      </div>
+      <div class="hdr-r">
+        <div class="rbadge" id="rBadge">...</div>
+        <button class="iBtn" onclick="openOv('settOv')" title="Настройки">⚙️</button>
+        <button class="iBtn" onclick="switchGroup()" title="Группы">🏠</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab on" data-tab="today">Сегодня</div>
+      <div class="tab" data-tab="all">Все</div>
+      <div class="tab" data-tab="my">Мои</div>
+      <div class="tab" data-tab="history">История</div>
+      <div class="tab" data-tab="report" id="repTab">Отчёт</div>
+      <div class="tab" data-tab="staff" id="staffTab" style="display:none">Состав</div>
+    </div>
+  </div>
+  <div class="dstrip">
+    <div class="dnav">
+      <button class="dBtn" onclick="shiftDay(-1)">‹</button>
+      <div class="dlbl" id="dLbl">—</div>
+      <button class="dBtn" onclick="shiftDay(1)">›</button>
+    </div>
+    <button class="tdBtn" onclick="goToday()">Сегодня</button>
+  </div>
+  <div class="sbar">
+    <div class="stat s0" onclick="statF('todo')"><div class="snum" id="sn0">0</div><div class="slbl">В очереди</div></div>
+    <div class="stat s1" onclick="statF('in-progress')"><div class="snum" id="sn1">0</div><div class="slbl">В работе</div></div>
+    <div class="stat s2" onclick="statF('done')"><div class="snum" id="sn2">0</div><div class="slbl">Готово</div></div>
+  </div>
+  <div class="frow" id="frow">
+    <button class="chip on" data-f="all">Все</button>
+    <button class="chip" data-f="todo">В очереди</button>
+    <button class="chip" data-f="in-progress">В работе</button>
+    <button class="chip" data-f="done">Готово</button>
+    <button class="chip" data-f="blocked">Заблок.</button>
+  </div>
+  <div class="twrap" id="twrap"><div class="ld"><div class="sp"></div><span>Загружаем...</span></div></div>
+</div>
+
+<button class="fab" id="fab" onclick="openAdd()" style="display:none">+</button>
+<div class="toast" id="toast"></div>
+
+<!-- ADD TASK -->
+<div class="ov" id="addOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="mtitle">Новая задача</div>
+  <div class="fg">
+    <label class="fl">Задачи * (можно несколько)</label>
+    <textarea class="fta" id="nRaw" rows="5" placeholder="1. Подготовить отчёт&#10;2. Созвониться с клиентом&#10;   2.1. Уточнить детали&#10;   2.2. Отправить КП" style="max-width:100%"></textarea>
+    <div class="pprev" id="pprev"></div>
+  </div>
+  <div class="fg"><label class="fl">Исполнитель</label><select class="fs" id="nAss" style="max-width:100%"><option value="">— не назначен —</option></select></div>
+  <div class="fg"><label class="fl">Дедлайн</label><input class="fi" type="date" id="nDL" style="max-width:100%"></div>
+  <div class="fg"><label class="fl">Приоритет</label><select class="fs" id="nPr" style="max-width:100%"><option value="medium">Средний</option><option value="high">Высокий ↑</option><option value="low">Низкий ↓</option></select></div>
+  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('addOv')">Отмена</button><button class="btn btn-p" id="addBtn" onclick="confirmAdd()">Создать</button></div>
+</div>
+</div>
+
+<!-- DETAIL -->
+<div class="ov" id="detOv"><div class="modal"><div class="hndl"></div><div id="detCont"></div></div></div>
+
+<!-- SETTINGS -->
+<div class="ov" id="settOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="mtitle">Внешний вид</div>
+  <div class="ssec"><div class="sstitle">Тема</div>
+    <div class="thgrid">
+      <div class="thopt" data-th="dark" onclick="setTh('dark')"><div class="thsw" style="background:#0f0f13;border:1px solid #333"></div>Тёмная</div>
+      <div class="thopt" data-th="light" onclick="setTh('light')"><div class="thsw" style="background:#f4f4f8;border:1px solid #ddd"></div>Светлая</div>
+      <div class="thopt" data-th="warm" onclick="setTh('warm')"><div class="thsw" style="background:#1a1208;border:1px solid #444"></div>Тёплая</div>
+      <div class="thopt" data-th="ocean" onclick="setTh('ocean')"><div class="thsw" style="background:#071520;border:1px solid #1e3850"></div>Океан</div>
+    </div>
+  </div>
+  <div class="ssec"><div class="sstitle">Шрифт</div>
+    <div class="fntrow">
+      <div class="fopt" data-fn="system" onclick="setFn('system')" style="font-family:-apple-system,sans-serif">Системный</div>
+      <div class="fopt" data-fn="georgia" onclick="setFn('georgia')" style="font-family:Georgia,serif">Georgia</div>
+      <div class="fopt" data-fn="mono" onclick="setFn('mono')" style="font-family:monospace">Mono</div>
+      <div class="fopt" data-fn="rounded" onclick="setFn('rounded')" style="font-family:'Trebuchet MS',sans-serif">Rounded</div>
+    </div>
+  </div>
+  <div class="ssec"><div class="sstitle">Размер текста</div>
+    <div class="fszrow"><button class="fsbtn" onclick="chFS(-1)">−</button><div class="fsval" id="fsv">15px</div><button class="fsbtn" onclick="chFS(1)">+</button></div>
+  </div>
+  <button class="btn btn-s" onclick="closeOv('settOv')">Закрыть</button>
+</div>
+</div>
+
+<!-- STAFF -->
+<div class="ov" id="staffOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="mtitle">Состав команды</div>
+  <div class="alist" id="staffList"></div>
+  <div class="fg"><label class="fl">Имя</label><input class="fi" id="sName" placeholder="Имя Фамилия" style="max-width:100%"></div>
+  <div class="fg"><label class="fl">Роль</label><select class="fs" id="sRole" style="max-width:100%"><option value="manager">Менеджер</option><option value="assistant">Ассистент</option><option value="director">Руководитель</option></select></div>
+  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('staffOv')">Закрыть</button><button class="btn btn-p" onclick="addStaffMember()">Добавить</button></div>
+</div>
+</div>
+
+<!-- HIST TASK -->
+<div class="ov" id="histOv"><div class="modal"><div class="hndl"></div><div class="mtitle">История задачи</div><div id="histCont"></div><button class="btn btn-s" onclick="closeOv('histOv')" style="margin-top:8px">Закрыть</button></div></div>
+
+<script>
+// ============================================================
+// CONFIG — замените URL и пароли
+// ============================================================
+const CFG = {
+  URL: 'https://script.google.com/macros/s/AKfycbw6xTmrHOD-ctqVZiUxdhc2wzEf73aXoMvC4hjCpDaMvlUB2dU_Ism15h0xGqvs3BKwvg/exec',
+  PASS_DIRECTOR:  'boss123',
+  PASS_ASSISTANT: 'assist456',
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); }
+
+let ME = null;           // { id, name, role }
+let CHAT_ID = null;
+let CHAT_NAME = '';
+let tasks = [], staff = [];
+let curTab = 'today', curDate = new Date();
+let actF = 'all', statFilter = null;
+let selTask = null;
+let fontSize = 15;
+
+const ROLE_LBL = { director:'👑 Руководитель', assistant:'🛡 Ассистент', manager:'👤 Менеджер' };
+const canCreate = r => ['director','assistant'].includes(r);
+const canEdit   = r => ['director','assistant'].includes(r);
+const canHist   = r => r === 'assistant';
+const canStaff  = r => ['director','assistant'].includes(r);
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  loadPrefs();
+
+  // chat берём из URL (?chat=...) — бот передаёт его в ссылке
+  const params  = new URLSearchParams(location.search);
+  const urlChat = params.get('chat');
+  const urlUid  = params.get('uid');
+
+  // Telegram WebApp user
+  const tgUser = tg?.initDataUnsafe?.user;
+  const tgChat = tg?.initDataUnsafe?.chat?.id;
+
+  // Определяем chat_id
+  if (urlChat)      CHAT_ID = urlChat;
+  else if (tgChat)  CHAT_ID = String(tgChat);
+
+  // Определяем user
+  if (tgUser) {
+    ME = { id: String(tgUser.id), name: tgUser.first_name+(tgUser.last_name?' '+tgUser.last_name:''), role: 'manager' };
+  } else if (urlUid) {
+    // Открыто через inline-кнопку бота в браузере — берём uid из URL
+    const saved = lsGet('me_'+urlUid);
+    if (saved) ME = saved;
+    else ME = { id: urlUid, name: 'Пользователь', role: 'manager' };
+  } else {
+    // Открыто напрямую через браузер без параметров — показать инструкцию
+    showNoTgScreen();
+    return;
+  }
+
+  if (!CHAT_ID) {
+    // Мультигруппа — выбор
+    const groups = lsGet('myGroups') || [];
+    if (groups.length > 1) { showGroupPicker(groups.map(g=>g.chatId)); return; }
+    if (groups.length === 1) { CHAT_ID = groups[0].chatId; CHAT_NAME = groups[0].name; }
+    else { showNoTgScreen(); return; }
+  }
+
+  // Получаем роль с сервера
+  showLoading();
+  const r = await api('getMe', {});
+  if (r.ok && r.member) {
+    ME.role = r.member.role;
+    ME.name = r.member.name || ME.name;
+    lsSet('me_'+ME.id, ME);
+  } else if (r.notRegistered) {
+    // Не зарегистрирован — просим написать /start в группе
+    showNotRegistered();
+    return;
+  }
+  // Сохраняем группу
+  const grpR = await api('getGroups', { chatIds: [CHAT_ID] });
+  if (grpR.ok && grpR.groups[0]) CHAT_NAME = grpR.groups[0].name;
+  lsSet('myGroups', [{chatId: CHAT_ID, name: CHAT_NAME}]);
+
+  startApp();
+}
+
+// ============================================================
+// ЭКРАНЫ-ЗАГЛУШКИ
+// ============================================================
+function showLoading() {
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginWrap').innerHTML = '<div class="l-icon">⏳</div><div class="l-title">Загрузка...</div>';
+}
+
+function showNoTgScreen() {
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginWrap').innerHTML = `
+    <div class="l-icon">📱</div>
+    <div class="l-title">Откройте через Telegram</div>
+    <div class="l-sub">Нажмите кнопку <strong>📋 Задачи</strong> в вашей группе.<br><br>Если вы ещё не зарегистрированы — напишите <strong>/start</strong> боту в группе.</div>`;
+}
+
+function showNotRegistered() {
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginWrap').innerHTML = `
+    <div class="l-icon">🔒</div>
+    <div class="l-title">Вы не в списке</div>
+    <div class="l-sub">Напишите <strong>/start</strong> в группе Telegram,<br>чтобы зарегистрироваться.<br><br>После этого снова откройте планировщик через кнопку в группе.</div>`;
+}
+
+// ============================================================
+// GROUP PICKER
+// ============================================================
+async function showGroupPicker(chatIds) {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('groupWrap').style.display = 'flex';
+  document.getElementById('fab').style.display = 'none';
+  const list = document.getElementById('groupList');
+
+  if (!chatIds.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center">Нет групп.<br>Напишите /start в группе Telegram.</div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="ld"><div class="sp"></div></div>';
+  const r = await api('getGroups', { chatIds });
+  const groups = r.ok ? r.groups : chatIds.map(id=>({chatId:id, name:'Группа '+id}));
+  lsSet('myGroups', groups);
+
+  if (groups.length === 1) { CHAT_ID = groups[0].chatId; CHAT_NAME = groups[0].name; startApp(); return; }
+
+  list.innerHTML = groups.map(g=>`
+    <div class="g-card" onclick="selectGroup('${g.chatId}','${esc(g.name)}')">
+      <div class="g-icon">👥</div>
+      <div><div class="g-name">${esc(g.name)}</div><div class="g-sub">ID: ${g.chatId}</div></div>
+    </div>`).join('');
+}
+
+function selectGroup(chatId, name) {
+  CHAT_ID = chatId; CHAT_NAME = name; startApp();
+}
+function switchGroup() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('fab').style.display = 'none';
+  const groups = lsGet('myGroups') || [];
+  showGroupPicker(groups.map(g=>g.chatId));
+}
+
+// ============================================================
+// START APP
+// ============================================================
+async function startApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('groupWrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('rBadge').textContent = ROLE_LBL[ME.role] || ME.role;
+  document.getElementById('groupName').textContent = CHAT_NAME || ('Группа '+CHAT_ID);
+  if (canCreate(ME.role)) document.getElementById('fab').style.display = 'flex';
+  if (canStaff(ME.role)) document.getElementById('staffTab').style.display = '';
+
+  // Register group
+  api('registerGroup', { chatId: CHAT_ID, name: CHAT_NAME });
+
+  updDateLbl();
+  await Promise.all([loadTasks(), loadStaff()]);
+  renderAll();
+}
+
+// ============================================================
+// API
+// ============================================================
+async function api(action, data={}) {
+  try {
+    const r = await fetch(CFG.URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action, chatId: CHAT_ID, userId: ME?.id, userName: ME?.name, userRole: ME?.role, ...data })
+    });
+    return await r.json();
+  } catch(e) { return { ok:false, error: String(e) }; }
+}
+
+// ============================================================
+// LOAD
+// ============================================================
+async function loadTasks() {
+  const r = await api('getTasks');
+  if (r.ok) tasks = r.tasks;
+}
+async function loadStaff() {
+  const r = await api('getStaff');
+  if (r.ok) staff = r.staff;
+}
+
+// ============================================================
+// PREFS
+// ============================================================
+function loadPrefs() {
+  const p = lsGet('prefs')||{};
+  applyTh(p.theme||'dark',false);
+  applyFn(p.font||'system',false);
+  applyFS(p.size||15,false);
+}
+function savePrefs(){ lsSet('prefs',{theme:document.documentElement.dataset.theme||'dark',font:document.documentElement.dataset.font||'system',size:fontSize}); }
+function setTh(t){ applyTh(t); savePrefs(); }
+function applyTh(t,ui=true){ document.documentElement.dataset.theme=t==='dark'?'':t; if(ui)document.querySelectorAll('.thopt').forEach(o=>o.classList.toggle('sel',o.dataset.th===t)); }
+function setFn(f){ applyFn(f); savePrefs(); }
+function applyFn(f,ui=true){ const M={system:"'SF Pro Display',-apple-system,sans-serif",georgia:"Georgia,serif",mono:"'Courier New',monospace",rounded:"'Trebuchet MS',sans-serif"}; document.documentElement.style.setProperty('--font',M[f]||M.system); document.documentElement.dataset.font=f; if(ui)document.querySelectorAll('.fopt').forEach(o=>o.classList.toggle('sel',o.dataset.fn===f)); }
+function chFS(d){ applyFS(Math.max(12,Math.min(20,fontSize+d))); savePrefs(); }
+function applyFS(s,ui=true){ fontSize=s; document.documentElement.style.setProperty('--fs',s+'px'); if(ui)document.getElementById('fsv').textContent=s+'px'; }
+function openSettUI(){ const t=document.documentElement.dataset.theme||'dark'; document.querySelectorAll('.thopt').forEach(o=>o.classList.toggle('sel',o.dataset.th===(t||'dark'))); const f=document.documentElement.dataset.font||'system'; document.querySelectorAll('.fopt').forEach(o=>o.classList.toggle('sel',o.dataset.fn===f)); document.getElementById('fsv').textContent=fontSize+'px'; openOv('settOv'); }
+
+// ============================================================
+// DATE
+// ============================================================
+function updDateLbl(){
+  const today=new Date(), isTd=curDate.toDateString()===today.toDateString();
+  const d=curDate.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+  document.getElementById('dLbl').textContent=isTd?'Сегодня, '+curDate.toLocaleDateString('ru-RU',{day:'numeric',month:'long'}):d;
+}
+function shiftDay(n){ curDate.setDate(curDate.getDate()+n); updDateLbl(); renderTasks(); }
+function goToday(){ curDate=new Date(); updDateLbl(); renderTasks(); }
+
+// ============================================================
+// TABS
+// ============================================================
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); curTab=t.dataset.tab; statFilter=null;
+  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('af'));
+  if(curTab==='staff'){ openOv('staffOv'); return; }
+  renderAll();
+}));
+
+// ============================================================
+// STAT FILTER
+// ============================================================
+function statF(s){ if(statFilter===s){statFilter=null;document.querySelectorAll('.stat').forEach(x=>x.classList.remove('af'));}else{statFilter=s;document.querySelectorAll('.stat').forEach(x=>x.classList.remove('af'));const idx={todo:0,'in-progress':1,done:2}[s];document.querySelectorAll('.stat')[idx]?.classList.add('af');} renderTasks(); }
+
+// ============================================================
+// FILTER CHIPS
+// ============================================================
+function buildChips(){
+  const row=document.getElementById('frow');
+  row.querySelectorAll('.chip.ac').forEach(c=>c.remove());
+  staff.forEach(s=>{
+    const c=document.createElement('button');
+    c.className='chip ac'; c.dataset.f='a:'+s.name; c.textContent='👤 '+s.name;
+    c.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); actF='a:'+s.name; renderTasks(); };
+    row.appendChild(c);
+  });
+}
+document.querySelectorAll('.chip[data-f]').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); actF=c.dataset.f; renderTasks();
+}));
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll(){ buildChips(); renderTasks(); updStats(); }
+
+function getFiltered(){
+  const ds=curDate.toISOString().split('T')[0];
+  let f=[...tasks];
+  if(curTab==='today') f=f.filter(t=>t.date===ds);
+  if(curTab==='my') f=f.filter(t=>t.assignee&&t.assignee.toLowerCase()===ME.name.toLowerCase());
+  if(statFilter) f=f.filter(t=>t.status===statFilter);
+  else if(actF!=='all'){
+    if(actF.startsWith('a:')){ const nm=actF.slice(2); f=f.filter(t=>t.assignee===nm); }
+    else f=f.filter(t=>t.status===actF);
+  }
+  return f;
+}
+
+function updStats(){
+  document.getElementById('sn0').textContent=tasks.filter(t=>t.status==='todo').length;
+  document.getElementById('sn1').textContent=tasks.filter(t=>t.status==='in-progress').length;
+  document.getElementById('sn2').textContent=tasks.filter(t=>t.status==='done').length;
+}
+
+function renderTasks(){
+  if(curTab==='history'){ renderHistory(); return; }
+  if(curTab==='report'){ renderReport(); return; }
+  const wrap=document.getElementById('twrap');
+  const f=getFiltered(); updStats();
+  if(!f.length){ wrap.innerHTML='<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
+  const ord={blocked:0,'in-progress':1,todo:2,done:3};
+  f.sort((a,b)=>{ const od=(ord[a.status]??9)-(ord[b.status]??9); if(od!==0)return od; const pp={high:0,medium:1,low:2}; return (pp[a.priority]??1)-(pp[b.priority]??1); });
+  const pill={todo:'ptodo','in-progress':'pinp',done:'pdone',blocked:'pblk'};
+  const pillT={todo:'В очереди','in-progress':'В работе',done:'Готово',blocked:'Заблок.'};
+  const sdot={todo:'stodo','in-progress':'sinp',done:'sdone',blocked:'sblk'};
+  const pc={high:'ph',medium:'pm',low:'pl'};
+  const pt={high:'↑ Выс.',medium:'→ Ср.',low:'↓ Низ.'};
+  const grpL={blocked:'🔴 ЗАБЛОКИРОВАНО','in-progress':'🟡 В РАБОТЕ',todo:'🔵 В ОЧЕРЕДИ',done:'🟢 ГОТОВО'};
+  let html='', lastSt=null;
+  f.forEach(task=>{
+    if(task.status!==lastSt){ html+=`<div class="glbl">${grpL[task.status]||task.status}</div>`; lastSt=task.status; }
+    const subs=task.subtasks||[], ds=subs.filter(s=>s.done).length;
+    html+=`<div class="tc ${sdot[task.status]||''} ${task.status==='done'?'tdone':''}" data-id="${task.id}">
+      <div class="tm"><div class="tdot"></div><div class="tb">
+        <div class="tt">${esc(task.title)}</div>
+        <div class="tmeta">
+          ${task.assignee?`<span class="tass">👤 ${esc(task.assignee)}</span>`:''}
+          <span class="tpr ${pc[task.priority]||'pm'}">${pt[task.priority]||''}</span>
+          ${task.comments?.length?`<span class="tcomm">💬${task.comments.length}</span>`:''}
+          ${subs.length?`<span class="tsub">☑${ds}/${subs.length}</span>`:''}
+          ${task.date?`<span class="tass">📅${task.date}</span>`:''}
+        </div>
+      </div><div class="tpill ${pill[task.status]||''}">${pillT[task.status]||''}</div></div>
+      ${subs.length?`<div class="sbar2">${subs.map(s=>`<div class="sitem ${s.done?'sd':''}" data-tid="${task.id}" data-sid="${s.id}"><div class="schk ${s.done?'ck':''}" onclick="event.stopPropagation();togSub('${task.id}','${s.id}')">${s.done?'✓':''}</div><span>${esc(s.title)}</span></div>`).join('')}</div>`:''}
+    </div>`;
+  });
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('.tc').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
+}
+
+// ============================================================
+// HISTORY VIEW
+// ============================================================
+function renderHistory(){
+  const wrap=document.getElementById('twrap');
+  let entries=[];
+  tasks.forEach(t=>(t.history||[]).forEach(h=>entries.push({...h,taskTitle:t.title})));
+  entries.sort((a,b)=>b.when.localeCompare(a.when));
+  const periods=[{v:'day',l:'День'},{v:'week',l:'Неделя'},{v:'month',l:'Месяц'},{v:'quarter',l:'Квартал'},{v:'year',l:'Год'},{v:'all',l:'Всё'}];
+  let sp=lsGet('hperiod')||'day';
+  const now=new Date();
+  function inP(w){
+    const d=new Date(w.replace(/(\d{2})\.(\d{2})\.(\d{4})/,'$3-$2-$1'));
+    if(sp==='all')return true;
+    if(sp==='day')return d.toDateString()===curDate.toDateString();
+    if(sp==='week'){const wk=new Date(now);wk.setDate(now.getDate()-7);return d>=wk;}
+    if(sp==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+    if(sp==='quarter'){const q=Math.floor(now.getMonth()/3);return Math.floor(d.getMonth()/3)===q&&d.getFullYear()===now.getFullYear();}
+    if(sp==='year')return d.getFullYear()===now.getFullYear();
+    return true;
+  }
+  function build(){
+    const fe=entries.filter(e=>inP(e.when));
+    let h=`<div class="hfrow">${periods.map(p=>`<button class="chip ${sp===p.v?'on':''}" onclick="hPer('${p.v}')">${p.l}</button>`).join('')}</div>`;
+    if(!fe.length)h+='<div class="empty"><div class="eico">🔍</div><div>Нет записей</div></div>';
+    fe.forEach(e=>{ h+=`<div class="hentry"><div class="hwho">${esc(e.who)}</div><div class="hwhat"><strong>${esc(e.taskTitle)}</strong><br>${esc(e.what)}</div><div class="hwhen">${e.when}</div></div>`; });
+    return h;
+  }
+  wrap.innerHTML=build();
+  window.hPer=function(p){sp=p;lsSet('hperiod',p);wrap.innerHTML=build();};
+}
+
+// ============================================================
+// REPORT VIEW
+// ============================================================
+function renderReport(){
+  const wrap=document.getElementById('twrap');
+  const by={};
+  tasks.forEach(t=>{
+    const a=t.assignee||'Не назначен';
+    if(!by[a])by[a]={todo:0,inp:0,done:0,blk:0};
+    if(t.status==='todo')by[a].todo++;
+    else if(t.status==='in-progress')by[a].inp++;
+    else if(t.status==='done')by[a].done++;
+    else by[a].blk++;
+  });
+  let h=`<div style="margin-bottom:12px;display:flex;justify-content:flex-end"><button class="btn btn-p" style="max-width:160px;padding:8px" onclick="downloadReport()">📥 Скачать Excel</button></div>`;
+  h+=`<div style="background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden">
+    <div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--brd)">
+      <div>Сотрудник</div><div style="text-align:center;color:var(--blue)">Очер.</div><div style="text-align:center;color:var(--yellow)">Работа</div><div style="text-align:center;color:var(--green)">Готово</div><div style="text-align:center;color:var(--red)">Блок.</div>
+    </div>`;
+  Object.entries(by).forEach(([n,v])=>{
+    h+=`<div style="display:grid;grid-template-columns:1fr repeat(4,auto);gap:0;padding:9px 12px;border-bottom:1px solid var(--brd);font-size:13px;align-items:center">
+      <div style="font-weight:600">👤 ${esc(n)}</div>
+      <div style="text-align:center;font-weight:700;color:var(--blue)">${v.todo}</div>
+      <div style="text-align:center;font-weight:700;color:var(--yellow)">${v.inp}</div>
+      <div style="text-align:center;font-weight:700;color:var(--green)">${v.done}</div>
+      <div style="text-align:center;font-weight:700;color:var(--red)">${v.blk}</div>
+    </div>`;
+  });
+  h+='</div>';
+  wrap.innerHTML=h;
+}
+
+async function downloadReport(){
+  showToast('Запрашиваем отчёт...');
+  const r=await api('getReport');
+  if(!r.ok){showToast('Ошибка получения отчёта');return;}
+  // Build CSV for download
+  let csv='ID,Задача,Описание,Исполнитель,Дедлайн,Приоритет,Статус,Создал\n';
+  r.tasks.forEach(t=>{
+    csv+=[t.id,t.title,t.desc,t.assignee,t.date,t.priority,t.status,t.createdBy].map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='report_'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Отчёт скачан (CSV). Excel-файл придёт в группу в пятницу автоматически.');
+}
+
+// ============================================================
+// SUBTASK TOGGLE
+// ============================================================
+async function togSub(taskId,subId){
+  await api('toggleSubtask',{taskId,subId});
+  const t=tasks.find(x=>x.id===taskId);
+  if(t){const s=(t.subtasks||[]).find(x=>x.id===subId);if(s)s.done=!s.done;}
+  renderTasks();
+}
+
+// ============================================================
+// DETAIL
+// ============================================================
+function openDetail(id){ selTask=tasks.find(t=>t.id===id); if(!selTask)return; renderDetail(); openOv('detOv'); }
+
+function renderDetail(){
+  const t=selTask;
+  const pill={todo:'ptodo','in-progress':'pinp',done:'pdone',blocked:'pblk'};
+  const pillT={todo:'В очереди','in-progress':'В работе',done:'Готово',blocked:'Заблокировано'};
+  const statusOpts=[{v:'todo',i:'🔵',l:'В очереди'},{v:'in-progress',i:'🟡',l:'В работе'},{v:'done',i:'🟢',l:'Готово'},{v:'blocked',i:'🔴',l:'Заблок.'}];
+  const commH=(t.comments||[]).map(c=>`<div class="ci"><div class="cauth">${esc(c.author)}</div><div class="ctxt">${esc(c.text)}</div><div class="ctime">${c.time||''}</div></div>`).join('')||'<div style="font-size:12px;color:var(--muted);padding:5px 0">Нет комментариев</div>';
+  document.getElementById('detCont').innerHTML=`
+    <div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:700;line-height:1.3;flex:1">${esc(t.title)}</div>
+      <div class="tpill ${pill[t.status]||''}">${pillT[t.status]||''}</div>
+    </div>
+    ${t.desc?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">${esc(t.desc)}</div>`:''}
+    ${t.assignee?`<div class="det-row"><span class="lbl">Исполнитель</span><strong>${esc(t.assignee)}</strong></div>`:''}
+    ${t.date?`<div class="det-row"><span class="lbl">Дедлайн</span>${t.date}</div>`:''}
+    ${t.createdBy?`<div class="det-row"><span class="lbl">Создал</span>${esc(t.createdBy)}</div>`:''}
+    <div class="divhr"></div>
+    <div class="fl" style="margin-bottom:7px">Изменить статус</div>
+    <div class="sgrid">${statusOpts.map(s=>`<div class="sopt ${t.status===s.v?'sel':''}" onclick="chStatus('${t.id}','${s.v}')"><span class="si">${s.i}</span>${s.l}</div>`).join('')}</div>
+    <div class="divhr"></div>
+    <div class="fl" style="margin-bottom:7px">Комментарии</div>
+    <div class="clist">${commH}</div>
+    <div class="crow"><input class="fi" id="cInp" placeholder="Написать..." style="flex:1;max-width:none"><button class="sndBtn" onclick="sendComm()">➤</button></div>
+    ${canHist(ME.role)?`<div class="divhr"></div><button class="btn btn-s" onclick="openTaskHist('${t.id}')" style="width:100%">📜 История</button>`:''}
+    ${canEdit(ME.role)?`<div class="divhr"></div><button class="btn btn-d" onclick="delTask('${t.id}')" style="width:100%">🗑 Удалить</button>`:''}
+    <button class="btn btn-s" onclick="closeOv('detOv')" style="width:100%;margin-top:7px">Закрыть</button>
+  `;
+  document.getElementById('cInp').addEventListener('keydown',e=>{if(e.key==='Enter')sendComm();});
+}
+
+async function chStatus(id,status){
+  const r=await api('updateStatus',{id,status});
+  if(!r.ok){showToast('Ошибка');return;}
+  const t=tasks.find(x=>x.id===id);
+  if(t){t.status=status;t.history=t.history||[];t.history.push({who:ME.name,what:'Сменил статус → '+sLbl(status),when:nowStr()});}
+  showToast('Статус: '+sLbl(status));
+  if(selTask?.id===id){selTask.status=status;renderDetail();}
+  renderTasks();
+}
+
+async function sendComm(){
+  const inp=document.getElementById('cInp');
+  const text=inp.value.trim(); if(!text)return;
+  inp.value='';
+  const r=await api('addComment',{taskId:selTask.id,text});
+  selTask.comments=selTask.comments||[];
+  selTask.comments.push({author:ME.name,text,time:r.time||nowTime()});
+  renderDetail(); showToast('Комментарий добавлен');
+}
+
+async function delTask(id){
+  if(!confirm('Удалить задачу?'))return;
+  await api('deleteTask',{id}); tasks=tasks.filter(t=>t.id!==id);
+  closeOv('detOv'); renderAll(); showToast('Задача удалена');
+}
+
+function openTaskHist(id){
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  const entries=t.history||[];
+  document.getElementById('histCont').innerHTML=entries.length
+    ?entries.map(e=>`<div class="hentry"><div class="hwho">${esc(e.who)}</div><div class="hwhat">${esc(e.what)}</div><div class="hwhen">${e.when}</div></div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">Пусто</div>';
+  openOv('histOv');
+}
+
+// ============================================================
+// ADD TASK — PARSE
+// ============================================================
+function parseTasks(raw){
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const result=[]; let cur=null;
+  lines.forEach(l=>{
+    const sm=l.match(/^(\d+)\.(\d+)\.?\s+(.+)/);
+    const mm=l.match(/^(\d+)\.\s+(.+)/);
+    if(sm){ if(!cur){cur={title:'Задача '+sm[1],subtasks:[]};result.push(cur);} cur.subtasks=cur.subtasks||[]; cur.subtasks.push({id:'s'+Date.now()+Math.random().toString(36).slice(2),title:sm[3],done:false}); }
+    else if(mm){ cur={title:mm[2],subtasks:[]}; result.push(cur); }
+  });
+  return result;
+}
+
+document.getElementById('nRaw').addEventListener('input',function(){
+  const p=parseTasks(this.value), pv=document.getElementById('pprev');
+  if(!p.length){pv.style.display='none';return;}
+  pv.style.display='block';
+  pv.innerHTML='<div style="font-size:9px;color:var(--muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Будет создано:</div>'
+    +p.map(t=>`<div class="pit"><span class="pbadge ptask">Задача</span>${esc(t.title)}</div>`+(t.subtasks||[]).map(s=>`<div class="pit" style="padding-left:14px"><span class="pbadge psub">Подзад.</span>${esc(s.title)}</div>`).join('')).join('');
+});
+
+function fillAssigneeSelect(){
+  const sel=document.getElementById('nAss');
+  sel.innerHTML='<option value="">— не назначен —</option>'+staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+}
+
+function openAdd(){
+  if(!canCreate(ME.role)){showToast('Нет прав');return;}
+  document.getElementById('nRaw').value='';
+  document.getElementById('pprev').style.display='none';
+  document.getElementById('nDL').value=curDate.toISOString().split('T')[0];
+  fillAssigneeSelect();
+  openOv('addOv');
+}
+
+async function confirmAdd(){
+  const raw=document.getElementById('nRaw').value.trim();
+  if(!raw){showToast('Введите задачу');return;}
+  const parsed=parseTasks(raw);
+  const items=parsed.length?parsed:[{title:raw,subtasks:[]}];
+  const ass=document.getElementById('nAss').value;
+  const dl=document.getElementById('nDL').value;
+  const pr=document.getElementById('nPr').value;
+  const btn=document.getElementById('addBtn'); btn.disabled=true; btn.textContent='Создаём...';
+  for(const item of items){
+    const r=await api('addTask',{title:item.title,desc:'',assignee:ass,date:dl,priority:pr,status:'todo',subtasks:item.subtasks||[]});
+    if(r.ok&&r.id) tasks.unshift({id:r.id,title:item.title,desc:'',assignee:ass,date:dl,priority:pr,status:'todo',createdBy:ME.name,subtasks:item.subtasks||[],comments:[],history:r.history||[]});
+  }
+  closeOv('addOv'); renderAll();
+  showToast(items.length>1?`Создано: ${items.length} задач`:'Задача создана ✓');
+  btn.disabled=false; btn.textContent='Создать';
+}
+
+// ============================================================
+// STAFF
+// ============================================================
+function renderStaff(){
+  const rl={director:'👑 Руководитель',assistant:'🛡 Ассистент',manager:'👤 Менеджер'};
+  const isAsst = ME.role === 'assistant';
+  const roleOpts = ['manager','director','assistant'].map(r=>`<option value="${r}">${rl[r]}</option>`).join('');
+  document.getElementById('staffList').innerHTML = staff.length
+    ? staff.map(s=>`
+      <div class="aitem">
+        <div><div class="aname">${esc(s.name)}</div><div class="arole">${rl[s.role]||s.role}</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${isAsst ? `<select class="fs" style="max-width:130px;padding:4px 8px;font-size:11px" onchange="changeRole('${s.id}',this.value)">${['manager','director','assistant'].map(r=>`<option value="${r}" ${s.role===r?'selected':''}>${rl[r]}</option>`).join('')}</select>` : ''}
+          ${isAsst ? `<button class="delbtn" onclick="delSt('${s.id}')">✕</button>` : ''}
+        </div>
+      </div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px">Нет сотрудников</div>';
+}
+
+async function changeRole(id, newRole){
+  const r = await api('updateStaffRole',{id, role: newRole});
+  if(r.ok){
+    const s=staff.find(x=>x.id===id); if(s)s.role=newRole;
+    // если это текущий пользователь — обновить ME
+    if(ME.id===id){ ME.role=newRole; lsSet('me',ME); document.getElementById('rBadge').textContent=ROLE_LBL[newRole]||newRole; if(canCreate(newRole))document.getElementById('fab').style.display='flex'; else document.getElementById('fab').style.display='none'; }
+    showToast('Роль обновлена');
+  }
+  renderStaff();
+}
+
+async function addStaffMember(){
+  if(!canStaff(ME.role)){showToast('Нет прав');return;}
+  const name=document.getElementById('sName').value.trim();
+  if(!name){showToast('Введите имя');return;}
+  const role=document.getElementById('sRole').value;
+  const r=await api('addStaff',{name,role,tgId:''});
+  if(r.ok){staff.push({id:r.id||'s'+Date.now(),name,role,tgId:''});}
+  document.getElementById('sName').value='';
+  renderStaff(); buildChips(); showToast('Сотрудник добавлен');
+}
+async function delSt(id){
+  await api('delStaff',{id}); staff=staff.filter(s=>s.id!==id); renderStaff(); buildChips();
+}
+
+// ============================================================
+// OVERLAY
+// ============================================================
+function openOv(id){ document.getElementById(id).classList.add('open'); if(id==='staffOv')renderStaff(); if(id==='settOv')openSettUI(); }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ============================================================
+// HELPERS
+// ============================================================
+function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function sLbl(s){ return {todo:'В очереди','in-progress':'В работе',done:'Готово',blocked:'Заблокировано'}[s]||s; }
+function nowStr(){ const n=new Date(); return n.toLocaleDateString('ru-RU')+' '+n.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
+function nowTime(){ return new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
+function lsSet(k,v){ try{localStorage.setItem('tp2_'+k,JSON.stringify(v));}catch(e){} }
+function lsGet(k){ try{const v=localStorage.getItem('tp2_'+k);return v?JSON.parse(v):null;}catch(e){return null;} }
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
