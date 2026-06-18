@@ -1,1271 +1,1822 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Планировщик команды</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-:root{
-  --bg:#15151b;--surf:#1d1d25;--surf2:#26262f;--brd:#33333f;
-  --acc:#2dd4a8;--acc-s:rgba(45,212,168,.15);
-  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;
-  --txt:#eef0f2;--muted:#8a8d99;--r:16px;
-  --font:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --fs:15px;
-  --pad-mult:1;--gap-mult:1;
-}
-[data-theme=dark]{
-  --bg:#15151b;--surf:#1d1d25;--surf2:#26262f;--brd:#33333f;
-  --acc:#2dd4a8;--acc-s:rgba(45,212,168,.15);
-  --txt:#eef0f2;--muted:#8a8d99;
-}
-[data-theme=light]{
-  --bg:#f3efe9;--surf:#fdfbf8;--surf2:#ece6dc;--brd:#ddd5c7;
-  --acc:#1f9d7c;--acc-s:rgba(31,157,124,.13);
-  --txt:#221f1a;--muted:#8a8270;
-}
-[data-theme=sand]{
-  --bg:#ece2d0;--surf:#f8f1e4;--surf2:#e6d9c0;--brd:#d8c8a8;
-  --acc:#c8893a;--acc-s:rgba(200,137,58,.16);
-  --txt:#2c2316;--muted:#8f7c5c;
-}
-[data-theme=forest]{
-  --bg:#10180f;--surf:#172017;--surf2:#1f2b1e;--brd:#2c3a2a;
-  --acc:#5fbf7f;--acc-s:rgba(95,191,127,.16);
-  --txt:#e6efe2;--muted:#7a9075;
-}
-[data-theme=ocean]{
-  --bg:#071520;--surf:#0d2030;--surf2:#122840;--brd:#1e3850;
-  --acc:#22d3ee;--acc-s:rgba(34,211,238,.15);
-  --txt:#e0f4ff;--muted:#5090b0;
-}
-[data-theme=midnight]{
-  --bg:#0a0c14;--surf:#11131e;--surf2:#171a28;--brd:#232739;
-  --acc:#7c8cff;--acc-s:rgba(124,140,255,.16);
-  --txt:#e4e6f5;--muted:#6c7090;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var(--fs);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:0}
+// ================================================================
+// ЕЖЕДНЕВНИК КОМАНДЫ v3 — ФИНАЛЬНАЯ ВЕРСИЯ (polling, исправлено)
+// Заполните только значения ниже, остальное не трогайте
+// ================================================================
 
-/* LOGIN */
-#loginWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;gap:12px;text-align:center}
-.l-icon{font-size:48px}.l-title{font-size:22px;font-weight:700;letter-spacing:-.4px}.l-sub{font-size:13px;color:var(--muted);line-height:1.5}
-.fi,.fs,.fta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:12px;color:var(--txt);font-family:var(--font);font-size:15px;padding:11px 14px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;max-width:300px}
-.fi:focus,.fs:focus,.fta:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-s)}
-.fta{resize:none;min-height:70px;line-height:1.5;max-width:100%}
-.fs option{background:#1a1a22}
-.btn{padding:13px 20px;border:none;border-radius:14px;font-family:var(--font);font-size:16px;font-weight:600;cursor:pointer;transition:transform .12s,opacity .12s;width:100%;max-width:300px;letter-spacing:-.2px}
-.btn:active{transform:scale(.96);opacity:.85}
-.btn-p{background:var(--acc);color:#fff}
-.btn-s{background:var(--surf2);color:var(--txt)}
-.btn-d{background:rgba(248,113,113,.13);color:var(--red)}
-.btn-row{display:flex;gap:8px;margin-top:12px}
-.btn-row .btn{max-width:none}
+const BOT_TOKEN     = getConfigValue('BOT_TOKEN', '');
+const APP_URL       = 'https://dendengn4-cloud.github.io/Team_planner_4.1';
+const TZ            = 'Asia/Tashkent';
+const SPREADSHEET_ID = getConfigValue('SPREADSHEET_ID', '1miuX-TufzCy3pWYWIK9_lxHWqje813MvVTtymxQbIFM');
 
-/* GROUP PICKER */
-#groupWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:10px}
-.g-card{width:100%;max-width:340px;background:var(--surf);border:1px solid var(--brd);border-radius:16px;padding:14px 16px;cursor:pointer;transition:transform .15s,border-color .2s;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.g-card:active{border-color:var(--acc);transform:scale(.98)}
-.g-icon{font-size:24px}.g-name{font-size:15px;font-weight:600}.g-sub{font-size:11px;color:var(--muted)}
-
-/* HEADER */
-.hdr{background:var(--surf);border-bottom:1px solid var(--brd);padding:12px 16px 10px;position:sticky;top:0;z-index:100}
-.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.hgrouplbl{font-size:12px;font-weight:500;color:var(--muted);margin-top:1px}
-.logo{font-size:20px;font-weight:700;letter-spacing:-.4px}.logo span{color:var(--acc)}
-.hdr-r{display:flex;gap:6px;align-items:center}
-.rbadge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;border:none;color:var(--acc);background:var(--acc-s)}
-.iBtn{width:32px;height:32px;border:none;background:var(--surf2);border-radius:10px;color:var(--txt);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s}
-.iBtn:active{transform:scale(.9)}
-.tabs{display:flex;gap:2px;background:var(--surf2);border-radius:11px;padding:3px}
-.tab{flex:1;text-align:center;padding:6px 1px;border-radius:9px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
-.tab.on{background:var(--surf);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-
-/* DATE */
-.dstrip{padding:10px 16px 0;display:flex;align-items:center;justify-content:space-between}
-.dnav{display:flex;align-items:center;gap:8px}
-.dBtn{width:28px;height:28px;border:none;background:var(--surf2);border-radius:9px;color:var(--txt);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s}
-.dBtn:active{transform:scale(.9)}
-.dlbl{font-size:13px;font-weight:600;letter-spacing:-.1px}
-.tdBtn{font-size:12px;font-weight:600;color:var(--acc);background:var(--acc-s);border:none;border-radius:9px;padding:5px 11px;cursor:pointer}
-
-/* STATS */
-.sbar{display:flex;gap:6px;padding:10px 16px 0}
-.stat{flex:1;background:var(--surf);border:1px solid var(--brd);border-radius:13px;padding:8px 5px;text-align:center;cursor:pointer;transition:transform .12s,border-color .2s;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.stat.af,.stat:active{border-color:var(--acc);background:var(--acc-s);transform:scale(.97)}
-.snum{font-size:17px;font-weight:800;line-height:1;margin-bottom:2px}
-.slbl{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-
-/* FILTERS */
-.frow{display:flex;gap:6px;padding:8px 16px 0;overflow-x:auto;scrollbar-width:none}
-.frow::-webkit-scrollbar{display:none}
-.chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;color:var(--muted);background:var(--surf2);transition:all .15s}
-.chip.on{color:#fff;background:var(--acc)}
-
-/* TASKS */
-.twrap{padding:10px 16px 90px}
-.glbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:12px 0 6px 4px}
-.tc{background:var(--surf);border:none;border-radius:16px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.tc:active{transform:scale(.98)}.tc.tdone{opacity:.55}
-.tm{padding:12px 13px;display:flex;align-items:flex-start;gap:9px}
-[data-density=compact] .tm{padding:7px 10px;gap:6px}
-[data-density=compact] .tc{margin-bottom:5px}
-[data-density=compact] .tt{font-size:12px;margin-bottom:1px}
-[data-density=compact] .twrap{padding:7px 14px 90px}
-[data-density=compact] .sbar2{padding:4px 10px 6px 25px}
-[data-density=spacious] .tm{padding:16px 17px;gap:11px}
-[data-density=spacious] .tc{margin-bottom:11px}
-[data-density=spacious] .tt{margin-bottom:5px}
-[data-density=spacious] .twrap{padding:12px 18px 90px}
-[data-density=spacious] .sbar2{padding:8px 15px 10px 33px}
-.tdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.tb{flex:1;min-width:0}
-.tt{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:4px;word-break:break-word;letter-spacing:-.1px}
-.tmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.tass{font-size:11px;color:var(--muted)}.tpr{font-size:10px;font-weight:600;border-radius:6px;padding:2px 6px}
-.ph{background:rgba(248,113,113,.13);color:var(--red)}.pm{background:rgba(251,191,36,.13);color:var(--yellow)}.pl{background:rgba(96,165,250,.1);color:var(--blue)}
-.tcomm,.tsub{font-size:11px;color:var(--muted)}
-.tpill{font-size:10px;font-weight:600;border-radius:8px;padding:3px 9px;white-space:nowrap;flex-shrink:0;margin-top:1px}
-.sbar2{border-top:1px solid var(--brd);padding:6px 13px 8px 31px;display:flex;flex-direction:column;gap:4px}
-.sitem{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
-.sitem.sd{text-decoration:line-through;opacity:.6}
-.schk{width:18px;height:18px;border:1.5px solid var(--brd);border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
-.schk.ck{background:var(--green);border-color:var(--green);color:#fff}
-
-/* FAB */
-.fab{position:fixed;bottom:24px;right:16px;width:56px;height:56px;background:var(--acc);border:none;border-radius:50%;color:#fff;font-size:26px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.25);z-index:200;transition:transform .15s}
-.fab:active{transform:scale(.9)}
-
-/* OVERLAY */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:300;display:none;align-items:flex-end}
-.ov.open{display:flex}
-.modal{background:var(--surf);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:18px 16px 36px;animation:su .3s cubic-bezier(.32,.72,0,1)}
-@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.hndl{width:36px;height:5px;background:var(--brd);border-radius:3px;margin:0 auto 14px}
-.mtitle{font-size:17px;font-weight:700;margin-bottom:14px;letter-spacing:-.3px}
-.fg{margin-bottom:13px}.fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:block}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sopt{border:none;background:var(--surf2);border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:transform .12s,background .15s;font-size:12px;font-weight:600}
-.sopt:active{transform:scale(.96)}
-.sopt.sel{background:var(--acc-s);color:var(--acc)}
-.sopt .si{font-size:17px;display:block;margin-bottom:3px}
-.divhr{height:1px;background:var(--brd);margin:12px 0}
-
-/* HISTORY */
-.hfrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.hentry{background:var(--surf2);border-radius:12px;padding:10px 12px;margin-bottom:7px}
-.hwho{font-size:11px;font-weight:600;color:var(--acc);margin-bottom:2px}
-.hwhat{font-size:13px;line-height:1.4}.hwhen{font-size:10px;color:var(--muted);margin-top:3px}
-
-/* COMMENTS */
-.clist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
-.ci{background:var(--surf2);border-radius:12px;padding:9px 12px}
-.cauth{font-size:11px;font-weight:600;color:var(--acc);margin-bottom:2px}
-.ctxt{font-size:13px;line-height:1.4}.ctime{font-size:10px;color:var(--muted);margin-top:3px}
-.crow{display:flex;gap:7px}
-.sndBtn{width:40px;height:40px;background:var(--acc);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s}
-.sndBtn:active{transform:scale(.9)}
-
-/* STAFF */
-.alist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
-.catrow{display:flex;align-items:center;gap:10px;background:var(--surf2);border-radius:13px;padding:10px 12px}
-.catrow .cicon{font-size:17px;width:24px;text-align:center}
-.catrow .clbl{flex:1;font-size:14px;font-weight:600}
-.catrow .cdel{font-size:15px;color:var(--muted);cursor:pointer;padding:3px 6px}
-.swtoggle{width:38px;height:23px;border-radius:12px;background:var(--brd);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
-.swtoggle.on{background:var(--acc)}
-.swtoggle .knob{width:19px;height:19px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.swtoggle.on .knob{left:17px}
-.aitem{display:flex;align-items:center;justify-content:space-between;background:var(--surf2);border-radius:13px;padding:10px 12px}
-.aname{font-size:14px;font-weight:600}.arole{font-size:11px;color:var(--muted)}
-.delbtn{background:rgba(248,113,113,.13);color:var(--red);border:none;border-radius:9px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600}
-
-/* SETTINGS */
-.thgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.thopt{border:2px solid transparent;background:var(--surf2);border-radius:13px;padding:9px 4px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
-.thopt.sel{border-color:var(--acc)}
-.thsw{width:28px;height:28px;border-radius:9px;margin:0 auto 4px}
-.fntrow{display:flex;gap:8px;flex-wrap:wrap}
-.fopt{padding:7px 13px;border:none;background:var(--surf2);border-radius:11px;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
-.fopt.sel{background:var(--acc-s);color:var(--acc);font-weight:600}
-.fszrow{display:flex;gap:8px;align-items:center}
-.fsbtn{width:34px;height:34px;border:none;background:var(--surf2);border-radius:11px;color:var(--txt);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.fsval{font-size:14px;font-weight:600;min-width:36px;text-align:center}
-.slider{width:100%;height:6px;border-radius:3px;background:var(--surf2);outline:none;-webkit-appearance:none;accent-color:var(--acc);cursor:pointer}
-.slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25),0 0 0 1px var(--brd)}
-.accrow{display:flex;gap:10px;flex-wrap:wrap}
-.accdot{width:32px;height:32px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
-.accdot.sel{border-color:var(--txt)}
-
-/* PARSE PREVIEW */
-.pprev{background:var(--surf2);border-radius:12px;padding:10px 12px;margin-top:8px;display:none}
-.pit{font-size:12px;padding:2px 0;display:flex;gap:6px;align-items:flex-start}
-.pit .pbadge{font-size:10px;padding:1px 6px;border-radius:6px;font-weight:600;flex-shrink:0;margin-top:1px}
-.ptask{background:rgba(96,165,250,.13);color:var(--blue)}.psub{background:var(--acc-s);color:var(--acc)}
-.fgrow{display:flex;gap:10px}
-
-/* LOADING/EMPTY */
-.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:10px}
-.sp{width:28px;height:28px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:36px 20px;color:var(--muted)}
-.eico{font-size:34px;margin-bottom:8px}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surf2);border:none;border-radius:14px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--txt);opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18)}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.ssec{margin-bottom:18px}.sstitle{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:9px}
-.det-row{display:flex;gap:8px;margin-bottom:8px;font-size:13px;align-items:center}
-.det-row .lbl{color:var(--muted);min-width:80px;font-size:12px}
-</style>
-</head>
-<body>
-
-<!-- LOGIN -->
-<div id="loginWrap" style="display:none">
-  <div class="l-icon">📋</div>
-  <div class="l-title">Планировщик команды</div>
-  <div class="l-sub">Введите имя и выберите роль.<br>Устройство запомнит вас — вход только один раз.</div>
-  <input class="fi" id="lName" placeholder="Ваше имя" maxlength="40">
-  <select class="fs" id="lRole">
-    <option value="manager">👤 Менеджер</option>
-    <option value="director">👑 Руководитель</option>
-    <option value="assistant">🛡 Ассистент</option>
-  </select>
-  <button class="btn btn-p" onclick="doLogin()">Войти →</button>
-  <div style="font-size:10px;color:var(--muted)">Изменить роль может только ассистент через вкладку «Состав»</div>
-</div>
-
-<!-- GROUP PICKER -->
-<div id="groupWrap" style="display:none">
-  <div class="l-title" style="margin-bottom:4px">Выберите группу</div>
-  <div class="l-sub" style="margin-bottom:14px">Откройте нужный планировщик</div>
-  <div id="groupList"></div>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none">
-  <div class="hdr">
-    <div class="hdr1">
-      <div>
-        <div class="logo">Задачи команды<span>.</span></div>
-        <div class="hgrouplbl" id="groupName">—</div>
-      </div>
-      <div class="hdr-r">
-        <div class="rbadge" id="rBadge">...</div>
-        <button class="iBtn" id="catsBtn" onclick="openCatsUI()" title="Категории" style="display:none">🏷️</button>
-        <button class="iBtn" onclick="openOv('settOv')" title="Настройки">⚙️</button>
-        <button class="iBtn" onclick="switchGroup()" title="Группы">🏠</button>
-      </div>
-    </div>
-    <div class="tabs">
-      <div class="tab on" data-tab="today">Сегодня</div>
-      <div class="tab" data-tab="all">Все</div>
-      <div class="tab" data-tab="my">Мои</div>
-      <div class="tab" data-tab="history" id="histTab" style="display:none">История</div>
-      <div class="tab" data-tab="report" id="repTab">Отчёт</div>
-      <div class="tab" data-tab="staff" id="staffTab" style="display:none">Состав</div>
-    </div>
-  </div>
-  <div class="dstrip">
-    <div class="dnav">
-      <button class="dBtn" onclick="shiftDay(-1)">‹</button>
-      <div class="dlbl" id="dLbl">—</div>
-      <button class="dBtn" onclick="shiftDay(1)">›</button>
-    </div>
-    <button class="tdBtn" onclick="goToday()">Сегодня</button>
-  </div>
-  <div class="sbar" id="sbar"></div>
-  <div class="frow" id="frow">
-    <button class="chip on" data-f="all">Все</button>
-  </div>
-  <div class="twrap" id="twrap"><div class="ld"><div class="sp"></div><span>Загружаем...</span></div></div>
-</div>
-
-<button class="fab" id="fab" onclick="openAdd()" style="display:none">+</button>
-<div class="toast" id="toast"></div>
-
-<!-- ADD TASK -->
-<div class="ov" id="addOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Новая задача</div>
-  <div class="fg">
-    <label class="fl">Тема *</label>
-    <input class="fi" id="nTitle" placeholder="Например: Подготовить отчёт" style="max-width:100%">
-  </div>
-  <div class="fg">
-    <label class="fl">Подтема</label>
-    <input class="fi" id="nSub" placeholder="Уточнение к теме (необязательно)" style="max-width:100%">
-  </div>
-  <div class="fg">
-    <label class="fl">Комментарий</label>
-    <textarea class="fta" id="nComment" rows="3" placeholder="Дополнительные детали, контекст..." style="max-width:100%"></textarea>
-  </div>
-  <div class="fg"><label class="fl">Исполнитель</label><select class="fs" id="nAss" style="max-width:100%"><option value="">— не назначен —</option></select></div>
-  <div class="fgrow">
-    <div class="fg" style="flex:1"><label class="fl">Дата дедлайна</label><input class="fi" type="date" id="nDL" style="max-width:100%"></div>
-    <div class="fg" style="flex:1"><label class="fl">Время</label><input class="fi" type="time" id="nDLTime" style="max-width:100%"></div>
-  </div>
-  <div class="fg"><label class="fl">Срочность</label><select class="fs" id="nPr" style="max-width:100%"><option value="medium">Средняя</option><option value="high">Высокая ↑</option><option value="low">Низкая ↓</option></select></div>
-  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('addOv')">Отмена</button><button class="btn btn-p" id="addBtn" onclick="confirmAdd()">Создать</button></div>
-</div>
-</div>
-
-<!-- DETAIL -->
-<div class="ov" id="detOv"><div class="modal"><div class="hndl"></div><div id="detCont"></div></div></div>
-
-<!-- SETTINGS -->
-<div class="ov" id="settOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="sstitle" style="margin-bottom:2px">Персонализация</div>
-  <div class="mtitle">Темы и оформление</div>
-  <div class="ssec"><div class="sstitle">Тема</div>
-    <div class="thgrid">
-      <div class="thopt" data-th="light" onclick="setTh('light')"><div class="thsw" style="background:#fdfbf8;border:1px solid #ddd5c7"></div>Light</div>
-      <div class="thopt" data-th="dark" onclick="setTh('dark')"><div class="thsw" style="background:#1d1d25;border:1px solid #33333f"></div>Dark</div>
-      <div class="thopt" data-th="forest" onclick="setTh('forest')"><div class="thsw" style="background:#172017;border:1px solid #2c3a2a"></div>Forest</div>
-      <div class="thopt" data-th="ocean" onclick="setTh('ocean')"><div class="thsw" style="background:#0d2030;border:1px solid #1e3850"></div>Ocean</div>
-      <div class="thopt" data-th="sand" onclick="setTh('sand')"><div class="thsw" style="background:#f8f1e4;border:1px solid #d8c8a8"></div>Sand</div>
-      <div class="thopt" data-th="midnight" onclick="setTh('midnight')"><div class="thsw" style="background:#11131e;border:1px solid #232739"></div>Midnight</div>
-    </div>
-  </div>
-  <div class="ssec"><div class="sstitle">Цвет акцента</div>
-    <div class="accrow" id="accRow">
-      <div class="accdot" data-c="#2dd4a8" style="background:#2dd4a8" onclick="setAcc('#2dd4a8')"></div>
-      <div class="accdot" data-c="#22d3ee" style="background:#22d3ee" onclick="setAcc('#22d3ee')"></div>
-      <div class="accdot" data-c="#6c63ff" style="background:#6c63ff" onclick="setAcc('#6c63ff')"></div>
-      <div class="accdot" data-c="#f59e0b" style="background:#f59e0b" onclick="setAcc('#f59e0b')"></div>
-      <div class="accdot" data-c="#f87171" style="background:#f87171" onclick="setAcc('#f87171')"></div>
-      <div class="accdot" data-c="#5fbf7f" style="background:#5fbf7f" onclick="setAcc('#5fbf7f')"></div>
-    </div>
-  </div>
-  <div class="ssec"><div class="sstitle">Размер текста</div>
-    <input type="range" class="slider" id="fsSlider" min="12" max="20" step="1" value="15" oninput="onFSSlide(this.value)">
-  </div>
-  <div class="ssec"><div class="sstitle">Плотность интерфейса</div>
-    <input type="range" class="slider" id="densSlider" min="0" max="2" step="1" value="1" oninput="onDensSlide(this.value)">
-    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:3px"><span>Компактно</span><span>Просторно</span></div>
-  </div>
-  <div class="ssec"><div class="sstitle">Шрифт</div>
-    <div class="fntrow">
-      <div class="fopt" data-fn="system" onclick="setFn('system')" style="font-family:-apple-system,sans-serif">Системный</div>
-      <div class="fopt" data-fn="georgia" onclick="setFn('georgia')" style="font-family:Georgia,serif">Georgia</div>
-      <div class="fopt" data-fn="mono" onclick="setFn('mono')" style="font-family:monospace">Mono</div>
-      <div class="fopt" data-fn="rounded" onclick="setFn('rounded')" style="font-family:'Trebuchet MS',sans-serif">Rounded</div>
-    </div>
-  </div>
-  <div class="ssec" id="roleAccessSec"><div class="sstitle">Доступ</div>
-    <div id="roleAccessContent"></div>
-  </div>
-  <button class="btn btn-s" onclick="closeOv('settOv')">Закрыть</button>
-</div>
-</div>
-
-<!-- ROLE REQUESTS (только ассистент) -->
-<div class="ov" id="roleReqOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Запросы на роль ассистента</div>
-  <div class="l-sub" style="text-align:left;margin-bottom:10px">Если запрос не отклонить в течение 7 дней, роль будет назначена автоматически.</div>
-  <div class="alist" id="roleReqList"></div>
-  <button class="btn btn-s" onclick="closeOv('roleReqOv')" style="margin-top:6px">Закрыть</button>
-</div>
-</div>
-
-<!-- CATEGORIES (только ассистент) -->
-<div class="ov" id="catsOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Категории задач</div>
-  <div class="l-sub" style="text-align:left;margin-bottom:10px">Управляйте категориями и тем, что видно на рабочем столе у всей команды.</div>
-  <div class="alist" id="catsList"></div>
-  <div class="divhr"></div>
-  <div class="fg"><label class="fl">Название новой категории</label><input class="fi" id="catLabel" placeholder="Например: На проверке" style="max-width:100%"></div>
-  <div class="fg"><label class="fl">Иконка (эмодзи)</label><input class="fi" id="catIcon" placeholder="🟣" maxlength="4" style="max-width:100%"></div>
-  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('catsOv')">Закрыть</button><button class="btn btn-p" onclick="addCategoryUI()">Добавить</button></div>
-</div>
-</div>
-
-<!-- PUBLISH REPORT -->
-<div class="ov" id="pubOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Опубликовать отчёт в группу</div>
-  <div class="sgrid" style="margin-bottom:12px">
-    <div class="sopt sel" data-period="day" onclick="selectPeriod('day')"><span class="si">📅</span>День</div>
-    <div class="sopt" data-period="week" onclick="selectPeriod('week')"><span class="si">📆</span>Неделя</div>
-    <div class="sopt" data-period="month" onclick="selectPeriod('month')"><span class="si">🗓️</span>Месяц</div>
-    <div class="sopt" data-period="custom" onclick="selectPeriod('custom')"><span class="si">✏️</span>Свой период</div>
-  </div>
-  <div id="pubCustomRange" style="display:none">
-    <div class="fgrow">
-      <div class="fg" style="flex:1"><label class="fl">С</label><input class="fi" type="date" id="pubFrom" style="max-width:100%"></div>
-      <div class="fg" style="flex:1"><label class="fl">По</label><input class="fi" type="date" id="pubTo" style="max-width:100%"></div>
-    </div>
-  </div>
-  <div class="l-sub" style="text-align:left;margin-bottom:10px">Отчёт публикуется в группу сразу, без дополнительного подтверждения.</div>
-  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('pubOv')">Отмена</button><button class="btn btn-p" id="pubBtn" onclick="confirmPublish()">Опубликовать</button></div>
-</div>
-</div>
-
-<!-- STAFF -->
-<div class="ov" id="staffOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Состав команды</div>
-  <div class="alist" id="staffList"></div>
-  <div class="fg"><label class="fl">Имя</label><input class="fi" id="sName" placeholder="Имя Фамилия" style="max-width:100%"></div>
-  <div class="fg"><label class="fl">Роль</label><select class="fs" id="sRole" style="max-width:100%"><option value="manager">Менеджер</option><option value="assistant">Ассистент</option><option value="director">Руководитель</option></select></div>
-  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('staffOv')">Закрыть</button><button class="btn btn-p" onclick="addStaffMember()">Добавить</button></div>
-</div>
-</div>
-
-<!-- HIST TASK -->
-<div class="ov" id="histOv"><div class="modal"><div class="hndl"></div><div class="mtitle">История задачи</div><div id="histCont"></div><button class="btn btn-s" onclick="closeOv('histOv')" style="margin-top:8px">Закрыть</button></div></div>
-
-<script>
-// ============================================================
-// CONFIG — замените URL и пароли
-// ============================================================
-const CFG = {
-  URL: 'https://script.google.com/macros/s/AKfycbxa23DJoBlBLRQIhkdzQKXa_m2g9mXo1TrKaVhjPHNSIRXhJILUV75XuJeOjS_IEW-gBg/exec',
-  PASS_DIRECTOR:  'boss123',
-  PASS_ASSISTANT: 'assist456',
-};
-
-// ============================================================
-// STATE
-// ============================================================
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.expand(); }
-
-let ME = null;           // { id, name, role }
-let CHAT_ID = null;
-let CHAT_NAME = '';
-let tasks = [], staff = [];
-let categories = [];     // [{id,label,color,icon,order,visible}]
-let curTab = 'today', curDate = new Date();
-let actF = 'all', statFilter = null;
-let selTask = null;
-let fontSize = 15;
-
-const ROLE_DEFAULT_LBL = { director:'👑 Руководитель', assistant:'🛡 Ассистент', manager:'👤 Менеджер' };
-let ROLE_LBL = Object.assign({}, ROLE_DEFAULT_LBL);
-const canCreate = r => ['director','assistant'].includes(r);
-const canEdit   = r => ['director','assistant'].includes(r);
-const canHist   = r => r === 'assistant';
-const canStaff  = r => ['director','assistant'].includes(r);
-const isAssistant = r => r === 'assistant';
-
-// ============================================================
-// INIT
-// ============================================================
-async function init() {
-  loadPrefs();
-
-  // chat берём из URL (?chat=...) — бот передаёт его в ссылке
-  const params  = new URLSearchParams(location.search);
-  const urlChat = params.get('chat');
-  const urlUid  = params.get('uid');
-
-  // Telegram WebApp user
-  const tgUser = tg?.initDataUnsafe?.user;
-  const tgChat = tg?.initDataUnsafe?.chat?.id;
-
-  // Определяем chat_id
-  if (urlChat)      CHAT_ID = urlChat;
-  else if (tgChat)  CHAT_ID = String(tgChat);
-
-  // Определяем user
-  if (tgUser) {
-    ME = { id: String(tgUser.id), name: tgUser.first_name+(tgUser.last_name?' '+tgUser.last_name:''), role: 'manager' };
-  } else if (urlUid) {
-    // Открыто через inline-кнопку бота в браузере — берём uid из URL
-    const saved = lsGet('me_'+urlUid);
-    if (saved) ME = saved;
-    else ME = { id: urlUid, name: 'Пользователь', role: 'manager' };
-  } else {
-    // Открыто напрямую через браузер без параметров — показать инструкцию
-    showNoTgScreen();
-    return;
-  }
-
-  if (!CHAT_ID) {
-    // Мультигруппа — спрашиваем у бота, в каких группах зарегистрирован этот человек
-    showLoading();
-    const gr = await api('getUserGroups', { userId: ME.id });
-    const groups = (gr.ok && gr.groups) ? gr.groups : [];
-    if (!groups.length) { showNoTgScreen(); return; }
-    if (groups.length === 1) { CHAT_ID = groups[0].chatId; CHAT_NAME = groups[0].name; }
-    else { renderGroupPicker(groups); return; }
-  }
-
-  // Получаем роль с сервера
-  showLoading();
-  const r = await api('getMe', {});
-  if (r.ok && r.member) {
-    ME.role = r.member.role;
-    ME.name = r.member.name || ME.name;
-    lsSet('me_'+ME.id, ME);
-  } else if (r.notRegistered) {
-    // Не зарегистрирован — просим написать /start в группе
-    showNotRegistered();
-    return;
-  }
-  // Уточняем название группы, если ещё не известно (например, открыли через прямую ссылку из бота)
-  if (!CHAT_NAME) {
-    const grpR = await api('getGroups', { chatIds: [CHAT_ID] });
-    if (grpR.ok && grpR.groups[0]) CHAT_NAME = grpR.groups[0].name;
-  }
-
-  startApp();
-}
-
-// ============================================================
-// ЭКРАНЫ-ЗАГЛУШКИ
-// ============================================================
-function showLoading() {
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('loginWrap').innerHTML = '<div class="l-icon">⏳</div><div class="l-title">Загрузка...</div>';
-}
-
-function showNoTgScreen() {
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('loginWrap').innerHTML = `
-    <div class="l-icon">📱</div>
-    <div class="l-title">Откройте через Telegram</div>
-    <div class="l-sub">Нажмите кнопку <strong>📋 Задачи</strong> в вашей группе.<br><br>Если вы ещё не зарегистрированы — напишите <strong>/start</strong> боту в группе.</div>`;
-}
-
-function showNotRegistered() {
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('loginWrap').innerHTML = `
-    <div class="l-icon">🔒</div>
-    <div class="l-title">Вы не в списке</div>
-    <div class="l-sub">Напишите <strong>/start</strong> в группе Telegram,<br>чтобы зарегистрироваться.<br><br>После этого снова откройте планировщик через кнопку в группе.</div>`;
-}
-
-// ============================================================
-// GROUP PICKER
-// ============================================================
-function renderGroupPicker(groups) {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('groupWrap').style.display = 'flex';
-  document.getElementById('fab').style.display = 'none';
-  const list = document.getElementById('groupList');
-
-  if (!groups.length) {
-    list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center">Нет групп.<br>Напишите /start в группе Telegram.</div>';
-    return;
-  }
-  list.innerHTML = groups.map(g=>`
-    <div class="g-card" onclick="selectGroup('${g.chatId}','${esc(g.name)}')">
-      <div class="g-icon">👥</div>
-      <div><div class="g-name">${esc(g.name)}</div><div class="g-sub">${g.role?roleNameRuShort(g.role):'Группа'}</div></div>
-    </div>`).join('');
-}
-
-function roleNameRuShort(role){
-  return { director:'Руководитель', assistant:'Ассистент', manager:'Менеджер' }[role] || role;
-}
-
-async function selectGroup(chatId, name) {
-  CHAT_ID = chatId; CHAT_NAME = name;
-  showLoading();
-  const r = await api('getMe', {});
-  if (r.ok && r.member) {
-    ME.role = r.member.role;
-    ME.name = r.member.name || ME.name;
-    lsSet('me_'+ME.id, ME);
-  }
-  startApp();
-}
-
-async function switchGroup() {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('fab').style.display = 'none';
-  showLoading();
-  const gr = await api('getUserGroups', { userId: ME.id });
-  const groups = (gr.ok && gr.groups) ? gr.groups : [];
-  renderGroupPicker(groups);
-}
-
-// ============================================================
-// START APP
-// ============================================================
-async function startApp() {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('groupWrap').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('groupName').textContent = CHAT_NAME || ('Группа '+CHAT_ID);
-  loadPrefs(); // подхватываем персональную тему именно для этой группы (CHAT_ID уже известен)
-  // Сброс состояния от предыдущей группы (если переключились через "домик")
-  curTab='today'; actF='all'; statFilter=null; selTask=null;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab==='today'));
-  document.getElementById('staffTab').style.display='none';
-  document.getElementById('catsBtn').style.display='none';
-  document.getElementById('histTab').style.display='none';
-  document.getElementById('fab').style.display='none';
-  if (canCreate(ME.role)) document.getElementById('fab').style.display = 'flex';
-  if (canStaff(ME.role)) document.getElementById('staffTab').style.display = '';
-  if (isAssistant(ME.role)) document.getElementById('catsBtn').style.display = 'flex';
-  if (canHist(ME.role)) document.getElementById('histTab').style.display = '';
-
-  // Register group
-  api('registerGroup', { chatId: CHAT_ID, name: CHAT_NAME });
-
-  updDateLbl();
-  await Promise.all([loadTasks(), loadStaff(), loadCategories(), loadRoleLabels()]);
-  document.getElementById('rBadge').textContent = ROLE_LBL[ME.role] || ME.role;
-  renderAll();
-}
-
-// ============================================================
-// API
-// ============================================================
-async function api(action, data={}) {
+// ================================================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ================================================================
+function getConfigValue(key, fallback) {
   try {
-    const r = await fetch(CFG.URL, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action, chatId: CHAT_ID, userId: ME?.id, userName: ME?.name, userRole: ME?.role, ...data })
+    return PropertiesService.getScriptProperties().getProperty(key) || fallback || '';
+  } catch (e) {
+    return fallback || '';
+  }
+}
+
+function assertBotConfigured() {
+  if (!BOT_TOKEN) throw new Error('BOT_TOKEN is not configured in Script Properties');
+}
+
+function setupConfig() {
+  PropertiesService.getScriptProperties().setProperties({
+    BOT_TOKEN: 'PASTE_TELEGRAM_BOT_TOKEN_HERE',
+    SPREADSHEET_ID: SPREADSHEET_ID
+  }, true);
+  Logger.log('Config template saved. Replace BOT_TOKEN in Script Properties, then run setupAll().');
+}
+
+function getSheet(name, headers) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    if (headers) {
+      sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sh.setFrozenRows(1);
+    }
+  }
+  return sh;
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+function nowStr() {
+  return Utilities.formatDate(new Date(), TZ, 'dd.MM.yyyy HH:mm');
+}
+function todayStr() {
+  return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+}
+function dateOnly(s) {
+  return s ? String(s).substring(0, 10) : '';
+}
+function statusLabel(s, chatId) {
+  if (chatId) {
+    const cats = getCategoriesRaw(chatId);
+    const found = cats.find(function(c) { return c.id === s; });
+    if (found) return found.label;
+  }
+  return { todo: 'В очереди', 'in-progress': 'В работе', done: 'Готово', blocked: 'Отменено', cancelled: 'Отменено' }[s] || s;
+}
+function fmtDate(d) {
+  return Utilities.formatDate(d, TZ, 'dd.MM.yyyy');
+}
+function esc(s) {
+  return String(s || '');
+}
+
+// ================================================================
+// ТОЧКА ВХОДА (HTTP — используется только Mini App, не Telegram)
+// ================================================================
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    return jsonResp(routeAPI(body));
+  } catch (err) {
+    Logger.log('doPost error: ' + err.toString());
+    return jsonResp({ ok: false, error: err.toString() });
+  }
+}
+
+function doGet(e) {
+  return jsonResp({ ok: true, msg: 'Planner API v3 online' });
+}
+
+function jsonResp(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ================================================================
+// TELEGRAM BOT — обработка команд
+// ================================================================
+function handleTelegramUpdate(upd) {
+  try {
+    const msg      = upd.message;
+    const cbq      = upd.callback_query;
+    const chatId   = String(msg ? msg.chat.id : (cbq ? cbq.message.chat.id : ''));
+    const userId   = String(msg ? msg.from.id : (cbq ? cbq.from.id : ''));
+    const userName = msg ? (msg.from.first_name || '') : (cbq ? (cbq.from.first_name || '') : '');
+    const text     = (msg && msg.text) ? msg.text : '';
+
+    Logger.log('handleTelegramUpdate: chatId=' + chatId + ' userId=' + userId + ' text=' + text);
+
+    if (!chatId || !userId) return;
+
+    // Команда без @botname, нижний регистр
+    const cmd = text.split('@')[0].trim().toLowerCase();
+
+    const chatType = msg ? (msg.chat.type || '') : '';
+    const isGroup  = (chatType === 'group' || chatType === 'supergroup');
+
+    if (cmd === '/start') {
+      handleStart(chatId, userId, userName, isGroup, msg);
+      return;
+    }
+    if (cmd === '/open' || cmd === '/app') {
+      handleOpen(chatId, userId, userName, isGroup);
+      return;
+    }
+    if (cmd.startsWith('/role')) {
+      handleRole(chatId, userId, text, isGroup);
+      return;
+    }
+    if (cmd === '/claimassistant') {
+      handleClaimAssistant(chatId, userId, userName, isGroup);
+      return;
+    }
+    if (cmd === '/members') {
+      handleMembers(chatId);
+      return;
+    }
+    if (cmd === '/help') {
+      handleHelp(chatId);
+      return;
+    }
+    if (cbq) {
+      var handled = handleReportCallback(cbq);
+      tgAnswer(cbq.id);
+      if (handled) return;
+    }
+  } catch (err) {
+    Logger.log('handleTelegramUpdate error: ' + err.toString());
+  }
+}
+
+function handleStart(chatId, userId, userName, isGroup, msg) {
+  if (!isGroup) {
+    tgSend(chatId,
+      'Привет, ' + userName + '!\n\n' +
+      'Добавьте меня в рабочую группу и напишите там /start, чтобы зарегистрироваться.\n\n' +
+      'Команда /open в группе откроет планировщик здесь, в личных сообщениях.'
+    );
+    return;
+  }
+  const groupName = msg.chat.title || ('Группа ' + chatId);
+  registerGroupIfNew(chatId, groupName);
+  const isAdmin = isTelegramAdmin(chatId, userId);
+  const existing = getMember(chatId, userId);
+
+  if (!existing) {
+    const role = isAdmin ? 'assistant' : 'manager';
+    addMember(chatId, userId, userName, role);
+    const roleLabel = isAdmin
+      ? 'Ассистент (вы администратор группы в Telegram)'
+      : 'Менеджер';
+    var txt = 'Вы зарегистрированы как ' + roleLabel + '\n\n';
+    txt += 'Открыть планировщик: /open\n';
+    if (isAdmin) {
+      txt += '\nНазначить роль: /role Имя руководитель';
+    }
+    tgSend(chatId, txt);
+    return;
+  }
+
+  // Повторный /start — синхронизируем роль с актуальным статусом администратора Telegram
+  if (isAdmin && existing.role !== 'assistant') {
+    setMemberRoleById(chatId, userId, 'assistant');
+    tgSend(chatId, userName + ', вы администратор группы — ваша роль обновлена до Ассистента ✅\n\nОткрыть: /open');
+    return;
+  }
+
+  tgSend(chatId, userName + ', вы уже в системе как ' + roleNameRu(existing.role) + '\n\nОткрыть: /open');
+}
+
+function handleOpen(chatId, userId, userName, isGroup) {
+  const member = getMember(chatId, userId);
+  Logger.log('handleOpen: member=' + JSON.stringify(member));
+  if (!member) {
+    tgSend(chatId, 'Сначала напишите /start в этой группе');
+    return;
+  }
+  const url = APP_URL + '?chat=' + chatId + '&uid=' + userId;
+  Logger.log('handleOpen: sending webapp url=' + url);
+
+  if (isGroup) {
+    // web_app-кнопки разрешены Telegram только в приватных чатах,
+    // поэтому шлём кнопку пользователю в личку, а в группе — короткое подтверждение
+    const sent = tgSendWebAppBtn(
+      userId,
+      'Планировщик команды\n' + userName + ' — ' + roleNameRu(member.role),
+      'Открыть планировщик',
+      url
+    );
+    if (sent) {
+      tgSend(chatId, userName + ', открыл планировщик в личных сообщениях ↗');
+    } else {
+      tgSend(chatId, userName + ', не получилось написать вам в личку.\nОткройте чат с этим ботом напрямую (нажмите на его имя/аватар), отправьте там /start, затем повторите /open в группе.');
+    }
+  } else {
+    tgSendWebAppBtn(
+      chatId,
+      'Планировщик команды\n' + userName + ' — ' + roleNameRu(member.role),
+      'Открыть планировщик',
+      url
+    );
+  }
+}
+
+function handleRole(chatId, userId, text, isGroup) {
+  const caller = getMember(chatId, userId);
+  if (!caller || caller.role !== 'assistant') {
+    tgSend(chatId, 'Назначать роли может только ассистент');
+    return;
+  }
+  const args  = text.replace(/\/role(@\w+)?/i, '').trim();
+  const parts = args.split(/\s+/);
+  if (parts.length < 2 || !args) {
+    tgSend(chatId, 'Формат: /role Имя роль\nРоли: менеджер, руководитель, ассистент\n\nСписок: /members');
+    return;
+  }
+  const roleWord  = parts[parts.length - 1].toLowerCase();
+  const nameQuery = parts.slice(0, parts.length - 1).join(' ');
+  const newRole   = parseRoleWord(roleWord);
+  if (!newRole) {
+    tgSend(chatId, 'Неизвестная роль: ' + roleWord + '\nДоступны: менеджер, руководитель, ассистент');
+    return;
+  }
+  if (setMemberRoleByName(chatId, nameQuery, newRole)) {
+    tgSend(chatId, nameQuery + ' теперь ' + roleNameRu(newRole));
+  } else {
+    tgSend(chatId, 'Участник ' + nameQuery + ' не найден\nСписок: /members');
+  }
+}
+
+function handleClaimAssistant(chatId, userId, userName, isGroup) {
+  if (!isGroup) {
+    tgSend(chatId, 'Эта команда работает только в группе');
+    return;
+  }
+  const members = getAllMembers(chatId);
+  const hasAssistant = members.some(function(m) { return m.role === 'assistant'; });
+  if (hasAssistant) {
+    tgSend(chatId, 'В этой группе уже есть ассистент.\nСписок участников: /members');
+    return;
+  }
+  const existing = getMember(chatId, userId);
+  if (existing) {
+    setMemberRoleById(chatId, userId, 'assistant');
+    tgSend(chatId, userName + ', вы назначены ассистентом ✅\n\nТеперь вы можете назначать роли: /role Имя руководитель');
+  } else {
+    addMember(chatId, userId, userName, 'assistant');
+    tgSend(chatId, userName + ', вы зарегистрированы и назначены ассистентом ✅\n\nТеперь вы можете назначать роли: /role Имя руководитель');
+  }
+}
+
+function handleMembers(chatId) {
+  const members = getAllMembers(chatId);
+  if (!members.length) {
+    tgSend(chatId, 'Нет зарегистрированных участников');
+    return;
+  }
+  var lines = members.map(function(m) {
+    return roleIcon(m.role) + ' ' + m.name + ' — ' + roleNameRu(m.role);
+  }).join('\n');
+  tgSend(chatId, 'Участники группы:\n\n' + lines);
+}
+
+function handleHelp(chatId) {
+  tgSend(chatId,
+    'Планировщик команды — команды:\n\n' +
+    '/start — зарегистрироваться\n' +
+    '/open — открыть планировщик\n' +
+    '/members — список участников\n' +
+    '/role Имя роль — назначить роль (только ассистент)\n' +
+    '/claimassistant — стать ассистентом, если в группе его ещё нет\n\n' +
+    'Роли: менеджер, руководитель, ассистент'
+  );
+}
+
+// ================================================================
+// УЧАСТНИКИ — лист Members_<chatId>
+// ================================================================
+function memberSheet(chatId) {
+  return getSheet('Members_' + chatId, ['userId', 'name', 'role', 'joinedAt']);
+}
+
+function getMember(chatId, userId) {
+  const data = memberSheet(chatId).getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(userId)) {
+      linkUserToGroup(userId, chatId); // обратная совместимость для уже существующих регистраций
+      return { userId: String(data[i][0]), name: data[i][1], role: data[i][2] };
+    }
+  }
+  return null;
+}
+
+function getAllMembers(chatId) {
+  const data = memberSheet(chatId).getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) out.push({ userId: String(data[i][0]), name: data[i][1], role: data[i][2] });
+  }
+  return out;
+}
+
+function addMember(chatId, userId, name, role) {
+  memberSheet(chatId).appendRow([String(userId), name, role, nowStr()]);
+  linkUserToGroup(userId, chatId);
+}
+
+// ================================================================
+// СВЯЗЬ ПОЛЬЗОВАТЕЛЬ ↔ ГРУППЫ — общий лист UserGroups (не привязан к chatId)
+// Нужен, чтобы бот знал, в каких группах состоит человек (для "домика" в Mini App)
+// ================================================================
+function userGroupsSheet() {
+  return getSheet('UserGroups', ['userId', 'chatId', 'linkedAt']);
+}
+
+function linkUserToGroup(userId, chatId) {
+  const sh   = userGroupsSheet();
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(userId) && String(data[i][1]) === String(chatId)) return; // уже есть
+  }
+  sh.appendRow([String(userId), String(chatId), nowStr()]);
+}
+
+function getUserGroupChatIds(userId) {
+  const data = userGroupsSheet().getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(userId) && data[i][1]) out.push(String(data[i][1]));
+  }
+  return out;
+}
+
+function getUserGroups(b) {
+  if (!b.userId) return { ok: false, error: 'Нужен userId' };
+  const chatIds = getUserGroupChatIds(b.userId);
+  const allGroups = getSheet('Groups', ['chatId', 'name', 'createdAt']).getDataRange().getValues();
+  var nameMap = {};
+  for (var i = 1; i < allGroups.length; i++) {
+    if (allGroups[i][0]) nameMap[String(allGroups[i][0])] = allGroups[i][1];
+  }
+  var result = chatIds.map(function(cid) {
+    var member = getMember(cid, b.userId);
+    var members = getAllMembers(cid);
+    return {
+      chatId: cid,
+      name: nameMap[cid] || ('Группа ' + cid),
+      role: member ? member.role : null,
+      memberCount: members.length
+    };
+  });
+  return { ok: true, groups: result };
+}
+
+function setMemberRoleByName(chatId, nameQuery, newRole) {
+  const sh   = memberSheet(chatId);
+  const data = sh.getDataRange().getValues();
+  const q    = nameQuery.toLowerCase();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][1]).toLowerCase().indexOf(q) !== -1) {
+      sh.getRange(i + 1, 3).setValue(newRole);
+      return true;
+    }
+  }
+  return false;
+}
+
+function setMemberRoleById(chatId, userId, newRole) {
+  const sh   = memberSheet(chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(userId)) {
+      sh.getRange(i + 1, 3).setValue(newRole);
+      return true;
+    }
+  }
+  return false;
+}
+
+// ================================================================
+// РОЛИ
+// ================================================================
+function parseRoleWord(w) {
+  var map = {
+    'менеджер': 'manager', 'manager': 'manager',
+    'руководитель': 'director', 'director': 'director', 'boss': 'director',
+    'ассистент': 'assistant', 'assistant': 'assistant', 'асс': 'assistant'
+  };
+  return map[w] || null;
+}
+function roleNameRu(r) {
+  return { director: 'Руководитель', assistant: 'Ассистент', manager: 'Менеджер' }[r] || r;
+}
+function roleIcon(r) {
+  return { director: '👑', assistant: '🛡', manager: '👤' }[r] || '👤';
+}
+
+// ================================================================
+// TELEGRAM HELPERS — используем обычный Markdown (не V2)
+// ================================================================
+function tgSend(chatId, text) {
+  try {
+    assertBotConfigured();
+    const res = UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({
+          chat_id: String(chatId),
+          text: text
+        })
+      }
+    );
+    const result = JSON.parse(res.getContentText());
+    if (!result.ok) {
+      Logger.log('tgSend FAILED: ' + JSON.stringify(result));
+    }
+  } catch (e) {
+    Logger.log('tgSend error: ' + e.toString());
+  }
+}
+
+function tgSendWebAppBtn(chatId, text, btnLabel, btnUrl) {
+  try {
+    assertBotConfigured();
+    const res = UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({
+          chat_id: String(chatId),
+          text: text,
+          reply_markup: {
+            inline_keyboard: [[{ text: btnLabel, web_app: { url: btnUrl } }]]
+          }
+        })
+      }
+    );
+    const result = JSON.parse(res.getContentText());
+    if (!result.ok) {
+      Logger.log('tgSendWebAppBtn FAILED: ' + JSON.stringify(result));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    Logger.log('tgSendWebAppBtn error: ' + e.toString());
+    return false;
+  }
+}
+
+function tgAnswer(callbackQueryId) {
+  try {
+    assertBotConfigured();
+    UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + BOT_TOKEN + '/answerCallbackQuery',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({ callback_query_id: callbackQueryId })
+      }
+    );
+  } catch (e) {
+    Logger.log('tgAnswer error: ' + e.toString());
+  }
+}
+
+// Возвращает true, если userId — администратор или владелец Telegram-группы chatId
+function isTelegramAdmin(chatId, userId) {
+  try {
+    assertBotConfigured();
+    const res = UrlFetchApp.fetch(
+      'https://api.telegram.org/bot' + BOT_TOKEN + '/getChatAdministrators?chat_id=' + chatId,
+      { muteHttpExceptions: true }
+    );
+    const data = JSON.parse(res.getContentText());
+    if (!data.ok) { Logger.log('getChatAdministrators error: ' + data.description); return false; }
+    return data.result.some(function(m) {
+      return String(m.user.id) === String(userId) && (m.status === 'creator' || m.status === 'administrator');
     });
-    return await r.json();
-  } catch(e) { return { ok:false, error: String(e) }; }
-}
-
-// ============================================================
-// LOAD
-// ============================================================
-async function loadTasks() {
-  const r = await api('getTasks');
-  if (r.ok) tasks = r.tasks;
-}
-async function loadStaff() {
-  const r = await api('getStaff');
-  if (r.ok) staff = r.staff;
-}
-async function loadCategories() {
-  const r = await api('getCategories');
-  if (r.ok) categories = r.categories;
-}
-async function loadRoleLabels() {
-  const r = await api('getRoleLabels');
-  if (r.ok) {
-    ROLE_LBL = Object.assign({}, ROLE_DEFAULT_LBL);
-    Object.keys(r.labels||{}).forEach(k => { if (r.labels[k]) ROLE_LBL[k] = r.labels[k]; });
+  } catch (e) {
+    Logger.log('isTelegramAdmin error: ' + e.toString());
+    return false;
   }
 }
 
-// ============================================================
-// CATEGORIES MANAGEMENT (ассистент)
-// ============================================================
-function openCatsUI(){ renderCatsList(); openOv('catsOv'); }
+// ================================================================
+// POLLING
+// ================================================================
+function pollUpdates() {
+  assertBotConfigured();
+  const props = PropertiesService.getScriptProperties();
+  let offset = Number(props.getProperty('tg_offset') || '0');
 
-function renderCatsList(){
-  const list=document.getElementById('catsList');
-  list.innerHTML=categories.slice().sort((a,b)=>a.order-b.order).map(c=>`
-    <div class="catrow">
-      <div class="cicon">${esc(c.icon)}</div>
-      <div class="clbl">${esc(c.label)}</div>
-      <div class="swtoggle ${c.visible?'on':''}" onclick="toggleCatVisibility('${c.id}')"><div class="knob"></div></div>
-      <div class="cdel" onclick="deleteCategoryUI('${c.id}')">🗑</div>
-    </div>
-  `).join('');
+  const res = UrlFetchApp.fetch(
+    'https://api.telegram.org/bot' + BOT_TOKEN + '/getUpdates?timeout=0&offset=' + offset,
+    { method: 'get', muteHttpExceptions: true }
+  );
+  const data = JSON.parse(res.getContentText());
+
+  if (!data.ok) {
+    Logger.log('getUpdates error: ' + (data.description || JSON.stringify(data)));
+    return;
+  }
+
+  Logger.log('Получено обновлений: ' + data.result.length);
+
+  data.result.forEach(function(upd) {
+    try {
+      Logger.log('Обрабатываю update_id: ' + upd.update_id);
+      handleTelegramUpdate(upd);
+    } catch (err) {
+      Logger.log('update handling error: ' + err.toString());
+    }
+    offset = upd.update_id + 1;
+  });
+
+  if (data.result.length > 0) {
+    props.setProperty('tg_offset', String(offset));
+  }
 }
 
-async function toggleCatVisibility(id){
-  const c=categories.find(x=>x.id===id); if(!c) return;
-  c.visible=!c.visible;
-  renderCatsList();
-  await api('updateCategory',{id,visible:c.visible});
-  renderAll();
+function deleteWebhook() {
+  assertBotConfigured();
+  const res = UrlFetchApp.fetch(
+    'https://api.telegram.org/bot' + BOT_TOKEN + '/deleteWebhook',
+    { muteHttpExceptions: true }
+  );
+  Logger.log('deleteWebhook: ' + res.getContentText());
 }
 
-async function deleteCategoryUI(id){
-  if(tasks.some(t=>t.status===id)){ showToast('Есть задачи с этой категорией — переназначьте их сначала'); return; }
-  const r=await api('deleteCategory',{id});
-  if(r.ok){ categories=categories.filter(c=>c.id!==id); renderCatsList(); renderAll(); showToast('Категория удалена'); }
-  else showToast(r.error||'Не удалось удалить');
+function resetOffset() {
+  PropertiesService.getScriptProperties().deleteProperty('tg_offset');
+  Logger.log('Offset сброшен');
 }
 
-async function addCategoryUI(){
-  const label=document.getElementById('catLabel').value.trim();
-  const icon=document.getElementById('catIcon').value.trim()||'⚪';
-  if(!label){ showToast('Введите название'); return; }
-  const r=await api('addCategory',{label,icon,color:randCatColor()});
-  if(r.ok){
-    await loadCategories();
-    document.getElementById('catLabel').value='';
-    document.getElementById('catIcon').value='';
-    renderCatsList(); renderAll();
-    showToast('Категория добавлена ✓');
-  } else showToast(r.error||'Не удалось добавить');
+// ================================================================
+// API ROUTER — запросы от Mini App
+// ================================================================
+function requireAssistant(b, fn) {
+  var m = b.chatId && b.userId ? getMember(b.chatId, b.userId) : null;
+  if (!m || m.role !== 'assistant') {
+    return { ok: false, error: 'Доступно только ассистенту' };
+  }
+  b.userRole = m.role;
+  b.userName = b.userName || m.name;
+  return fn(b);
 }
 
-function randCatColor(){
-  const palette=['#60a5fa','#fbbf24','#34d399','#f87171','#a78bfa','#fb923c','#22d3ee','#f472b6'];
-  return palette[Math.floor(Math.random()*palette.length)];
+function routeAPI(b) {
+  if (!b || !b.action) return { ok: false, error: 'Unknown action' };
+  if (b.action !== 'getUserGroups' && b.action !== 'registerGroup' && !b.chatId) {
+    return { ok: false, error: 'Нужен chatId' };
+  }
+  if (b.action !== 'registerGroup' && b.userId && b.chatId) {
+    const m = getMember(b.chatId, b.userId);
+    if (m) {
+      b.userRole = m.role;
+      b.userName = b.userName || m.name;
+    } else if (b.action === 'getMe') {
+      return { ok: false, notRegistered: true };
+    }
+  }
+  switch (b.action) {
+    case 'getMe':           return getMe(b);
+    case 'getTasks':        return getTasks(b);
+    case 'addTask':         return addTask(b);
+    case 'updateStatus':    return updateStatus(b);
+    case 'updateTask':      return updateTask(b);
+    case 'deleteTask':      return deleteTask(b);
+    case 'addComment':      return addComment(b);
+    case 'toggleSubtask':   return toggleSubtask(b);
+    case 'reorderTasks':    return requireAssistant(b, reorderTasks);
+    case 'getStaff':        return getStaff(b);
+    case 'addStaff':        return addStaff(b);
+    case 'delStaff':        return delStaff(b);
+    case 'updateStaffRole': return requireAssistant(b, updateStaffRole);
+    case 'getGroups':       return getGroups(b);
+    case 'getUserGroups':   return getUserGroups(b);
+    case 'registerGroup':   return registerGroup(b);
+    case 'updateGroupName': return requireAssistant(b, updateGroupName);
+    case 'getReportSettings': return getReportSettings(b);
+    case 'saveReportSettings': return requireAssistant(b, saveReportSettings);
+    case 'getReport':       return getReport(b);
+    case 'getReportCsv':    return getReportCsv(b);
+    case 'publishReportNow': return requireAssistant(b, publishReportNowAPI);
+    case 'getCategories':   return getCategories(b);
+    case 'addCategory':     return requireAssistant(b, addCategory);
+    case 'updateCategory':  return requireAssistant(b, updateCategory);
+    case 'deleteCategory':  return requireAssistant(b, deleteCategory);
+    case 'getRoleLabels':   return getRoleLabels(b);
+    case 'setRoleLabel':    return requireAssistant(b, setRoleLabel);
+    case 'getRoleRequests': return requireAssistant(b, getRoleRequests);
+    case 'requestAssistantRole': return requestAssistantRole(b);
+    case 'resolveRoleRequest': return requireAssistant(b, resolveRoleRequest);
+    case 'getBirthdayContacts': return getBirthdayContacts(b);
+    case 'addBirthdayContact': return requireAssistant(b, addBirthdayContact);
+    case 'deleteBirthdayContact': return requireAssistant(b, deleteBirthdayContact);
+    default: return { ok: false, error: 'Unknown action' };
+  }
 }
 
-// ============================================================
-// PREFS
-// ============================================================
-const DENSITY_MAP = ['compact', 'cozy', 'spacious'];
-function prefsKey(){ return CHAT_ID ? ('prefs_'+CHAT_ID) : 'prefs'; }
-function loadPrefs() {
-  const p = lsGet(prefsKey())||lsGet('prefs')||{};
-  applyTh(p.theme||'dark',false);
-  applyFn(p.font||'system',false);
-  applyFS(p.size||15,false);
-  applyAcc(p.accent||'',false);
-  applyDens(p.density!==undefined?p.density:1,false);
+function getMe(b) {
+  if (!b.userId || !b.chatId) return { ok: false };
+  var m = getMember(b.chatId, b.userId);
+  if (!m) return { ok: false, notRegistered: true };
+  if (isTelegramAdmin(b.chatId, b.userId) && m.role !== 'assistant') {
+    setMemberRoleById(b.chatId, b.userId, 'assistant');
+    m.role = 'assistant';
+  }
+  return { ok: true, member: m };
 }
-function savePrefs(){
-  lsSet(prefsKey(),{
-    theme:document.documentElement.dataset.theme||'dark',
-    font:document.documentElement.dataset.font||'system',
-    size:fontSize,
-    accent:document.documentElement.dataset.accent||'',
-    density:densityLevel
+
+// ================================================================
+// ГРУППЫ
+// ================================================================
+function getGroups(b) {
+  const data   = getSheet('Groups', ['chatId', 'name', 'createdAt']).getDataRange().getValues();
+  var result = [];
+  (b.chatIds || []).forEach(function(cid) {
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(cid)) {
+        result.push({ chatId: String(data[i][0]), name: data[i][1] });
+        break;
+      }
+    }
+  });
+  return { ok: true, groups: result };
+}
+
+function registerGroupIfNew(chatId, name) {
+  const sh   = getSheet('Groups', ['chatId', 'name', 'createdAt']);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(chatId)) return;
+  }
+  sh.appendRow([String(chatId), name, nowStr()]);
+}
+
+function registerGroup(b) {
+  registerGroupIfNew(b.chatId, b.name || ('Группа ' + b.chatId));
+  return { ok: true };
+}
+
+function updateGroupName(b) {
+  if (!b.name) return { ok: false, error: 'Name is required' };
+  const sh = getSheet('Groups', ['chatId', 'name', 'createdAt']);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.chatId)) {
+      sh.getRange(i + 1, 2).setValue(b.name);
+      return { ok: true };
+    }
+  }
+  sh.appendRow([String(b.chatId), b.name, nowStr()]);
+  return { ok: true };
+}
+
+// ================================================================
+// ЗАДАЧИ — лист Tasks_<chatId>
+// ================================================================
+var TASK_HDR = ['id', 'chatId', 'title', 'desc', 'assignee', 'date', 'priority', 'status', 'createdBy', 'createdAt', 'subtasks', 'historyJson', 'taskGroup', 'dependsOn', 'sortOrder'];
+
+function taskSheet(chatId) { return getSheet('Tasks_' + chatId, TASK_HDR); }
+
+function ensureTaskColumns(sh) {
+  var hdr = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), TASK_HDR.length)).getValues()[0];
+  TASK_HDR.forEach(function(name) {
+    if (hdr.indexOf(name) === -1) {
+      sh.getRange(1, sh.getLastColumn() + 1).setValue(name);
+      hdr.push(name);
+    }
   });
 }
-function setTh(t){ applyTh(t); savePrefs(); }
-function applyTh(t,ui=true){ document.documentElement.dataset.theme=t; if(ui)document.querySelectorAll('.thopt').forEach(o=>o.classList.toggle('sel',o.dataset.th===t)); }
-function setFn(f){ applyFn(f); savePrefs(); }
-function applyFn(f,ui=true){ const M={system:"'SF Pro Display',-apple-system,sans-serif",georgia:"Georgia,serif",mono:"'Courier New',monospace",rounded:"'Trebuchet MS',sans-serif"}; document.documentElement.style.setProperty('--font',M[f]||M.system); document.documentElement.dataset.font=f; if(ui)document.querySelectorAll('.fopt').forEach(o=>o.classList.toggle('sel',o.dataset.fn===f)); }
-function onFSSlide(v){ applyFS(Number(v)); savePrefs(); }
-function applyFS(s,ui=true){ fontSize=s; document.documentElement.style.setProperty('--fs',s+'px'); if(ui){const sl=document.getElementById('fsSlider'); if(sl)sl.value=s;} }
-function setAcc(c){ applyAcc(c); savePrefs(); }
-function applyAcc(c,ui=true){
-  document.documentElement.dataset.accent=c||'';
-  if(c){
-    document.documentElement.style.setProperty('--acc',c);
-    document.documentElement.style.setProperty('--acc-s',hexToRgba(c,.15));
-  } else {
-    document.documentElement.style.removeProperty('--acc');
-    document.documentElement.style.removeProperty('--acc-s');
+
+function rowToTask(r) {
+  var subs = [], hist = [];
+  try { subs = JSON.parse(r[10] || '[]'); } catch (e) {}
+  try { hist = JSON.parse(r[11] || '[]'); } catch (e) {}
+  var rawDate = r[5];
+  var dateStr = '';
+  if (rawDate) {
+    if (Object.prototype.toString.call(rawDate) === '[object Date]') {
+      // Sheets автоматически распознал ячейку как дату — форматируем обратно
+      var hh = rawDate.getHours(), mm = rawDate.getMinutes();
+      dateStr = Utilities.formatDate(rawDate, TZ, 'yyyy-MM-dd');
+      if (hh !== 0 || mm !== 0) dateStr += ' ' + Utilities.formatDate(rawDate, TZ, 'HH:mm');
+    } else {
+      dateStr = String(rawDate);
+    }
   }
-  if(ui)document.querySelectorAll('.accdot').forEach(d=>d.classList.toggle('sel',d.dataset.c===c));
-}
-function hexToRgba(hex,a){ const h=hex.replace('#',''); const r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16); return `rgba(${r},${g},${b},${a})`; }
-let densityLevel = 1;
-function onDensSlide(v){ applyDens(Number(v)); savePrefs(); }
-function applyDens(level,ui=true){ densityLevel=Number(level); document.documentElement.dataset.density=DENSITY_MAP[densityLevel]||'cozy'; if(ui){const sl=document.getElementById('densSlider'); if(sl)sl.value=densityLevel;} }
-function openSettUI(){
-  const t=document.documentElement.dataset.theme||'dark';
-  document.querySelectorAll('.thopt').forEach(o=>o.classList.toggle('sel',o.dataset.th===t));
-  const f=document.documentElement.dataset.font||'system';
-  document.querySelectorAll('.fopt').forEach(o=>o.classList.toggle('sel',o.dataset.fn===f));
-  const acc=document.documentElement.dataset.accent||'';
-  document.querySelectorAll('.accdot').forEach(d=>d.classList.toggle('sel',d.dataset.c===acc));
-  document.getElementById('fsSlider').value=fontSize;
-  document.getElementById('densSlider').value=densityLevel;
-  renderRoleAccessSection();
-  openOv('settOv');
-}
-
-async function renderRoleAccessSection(){
-  const el=document.getElementById('roleAccessContent');
-  if(isAssistant(ME.role)){
-    el.innerHTML=`<button class="btn btn-s" onclick="openRoleRequestsUI()" style="max-width:none">📋 Запросы на роль ассистента</button>`;
-  } else {
-    el.innerHTML=`<button class="btn btn-s" onclick="requestMyAssistantRole()" style="max-width:none">🙋 Запросить роль ассистента</button>`;
-  }
-}
-
-async function requestMyAssistantRole(){
-  const r=await api('requestAssistantRole',{});
-  if(r.ok) showToast('Запрос отправлен ассистентам ✓');
-  else showToast(r.error||'Не удалось отправить запрос');
-}
-
-async function openRoleRequestsUI(){
-  const r=await api('getRoleRequests',{});
-  const list=document.getElementById('roleReqList');
-  if(!r.ok){ list.innerHTML='<div style="color:var(--muted);font-size:13px">Ошибка загрузки</div>'; openOv('roleReqOv'); return; }
-  const pending=r.requests.filter(x=>x.status==='pending');
-  if(!pending.length){
-    list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">Нет активных запросов</div>';
-  } else {
-    list.innerHTML=pending.map(req=>`
-      <div class="aitem" style="flex-direction:column;align-items:stretch;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div class="aname">${esc(req.userName)}</div><div class="arole">До ${esc(req.expiresAt)}</div></div>
-        </div>
-        <div class="btn-row" style="margin-top:0">
-          <button class="btn btn-d" style="padding:8px" onclick="resolveRoleRequestUI('${req.id}','deny')">Отклонить</button>
-          <button class="btn btn-p" style="padding:8px" onclick="resolveRoleRequestUI('${req.id}','approve')">Одобрить</button>
-        </div>
-      </div>`).join('');
-  }
-  openOv('roleReqOv');
-}
-
-async function resolveRoleRequestUI(id,decision){
-  const r=await api('resolveRoleRequest',{id,decision});
-  if(r.ok){ showToast(decision==='approve'?'Роль назначена ✓':'Запрос отклонён'); openRoleRequestsUI(); }
-  else showToast(r.error||'Ошибка');
-}
-
-// ============================================================
-// DATE
-// ============================================================
-function updDateLbl(){
-  const today=new Date(), isTd=curDate.toDateString()===today.toDateString();
-  const d=curDate.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
-  document.getElementById('dLbl').textContent=isTd?'Сегодня, '+curDate.toLocaleDateString('ru-RU',{day:'numeric',month:'long'}):d;
-}
-function shiftDay(n){ curDate.setDate(curDate.getDate()+n); updDateLbl(); renderTasks(); }
-function goToday(){ curDate=new Date(); updDateLbl(); renderTasks(); }
-
-// ============================================================
-// TABS
-// ============================================================
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  t.classList.add('on'); curTab=t.dataset.tab; statFilter=null;
-  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('af'));
-  if(curTab==='staff'){ openOv('staffOv'); return; }
-  renderAll();
-}));
-
-// ============================================================
-// STAT FILTER
-// ============================================================
-function statF(s){
-  if(statFilter===s){statFilter=null;document.querySelectorAll('.stat').forEach(x=>x.classList.remove('af'));}
-  else{statFilter=s;document.querySelectorAll('.stat').forEach(x=>x.classList.toggle('af',x.dataset.s===s));}
-  renderTasks();
-}
-
-// ============================================================
-// FILTER CHIPS
-// ============================================================
-function buildChips(){
-  const row=document.getElementById('frow');
-  row.innerHTML='<button class="chip on" data-f="all">Все</button>';
-  visibleCats().forEach(c=>{
-    const b=document.createElement('button');
-    b.className='chip'; b.dataset.f=c.id; b.textContent=c.icon+' '+c.label;
-    b.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); b.classList.add('on'); actF=c.id; renderTasks(); };
-    row.appendChild(b);
-  });
-  staff.forEach(s=>{
-    const c=document.createElement('button');
-    c.className='chip ac'; c.dataset.f='a:'+s.name; c.textContent='👤 '+s.name;
-    c.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); actF='a:'+s.name; renderTasks(); };
-    row.appendChild(c);
-  });
-  row.querySelector('[data-f="all"]').onclick=()=>{
-    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-    row.querySelector('[data-f="all"]').classList.add('on'); actF='all'; renderTasks();
+  return {
+    id: r[0], chatId: r[1], title: r[2], desc: r[3], assignee: r[4],
+    date: dateStr,
+    priority: r[6], status: r[7], createdBy: r[8], createdAt: r[9],
+    subtasks: subs, history: hist,
+    taskGroup: r[12] || '',
+    dependsOn: r[13] || '',
+    sortOrder: Number(r[14]) || 0
   };
 }
 
-// ============================================================
-// RENDER ALL
-// ============================================================
-function renderAll(){ buildChips(); renderTasks(); updStats(); }
-
-function dateOnly(s){ return s ? String(s).substring(0,10) : ''; }
-function catById(id){ return categories.find(c=>c.id===id) || {id, label:id, color:'#9aa0a6', icon:'⚪', order:99, visible:true}; }
-function catColor(id){ return catById(id).color; }
-function catLabel(id){ return catById(id).label; }
-function catIcon(id){ return catById(id).icon; }
-function visibleCats(){ return categories.filter(c=>c.visible).sort((a,b)=>a.order-b.order); }
-function fmtTaskDate(s){
-  if(!s) return '';
-  const dpart=s.substring(0,10), tpart=s.length>10?s.substring(11):'';
-  const [y,m,d]=dpart.split('-');
-  return d+'.'+m+'.'+y+(tpart?(' в '+tpart):'');
-}
-
-function getFiltered(){
-  const ds=curDate.toISOString().split('T')[0];
-  let f=[...tasks];
-  if(curTab==='today') f=f.filter(t=>dateOnly(t.date)===ds);
-  if(curTab==='my') f=f.filter(t=>t.assignee&&t.assignee.toLowerCase()===ME.name.toLowerCase());
-  if(statFilter) f=f.filter(t=>t.status===statFilter);
-  else if(actF!=='all'){
-    if(actF.startsWith('a:')){ const nm=actF.slice(2); f=f.filter(t=>t.assignee===nm); }
-    else f=f.filter(t=>t.status===actF);
+function getTasks(b) {
+  const sh = taskSheet(b.chatId);
+  ensureTaskColumns(sh);
+  const data  = sh.getDataRange().getValues();
+  const comms = getCommentMap(b.chatId);
+  var tasks = [];
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    var t = rowToTask(data[i]);
+    t.comments = comms[t.id] || [];
+    tasks.push(t);
   }
-  return f;
+  tasks.reverse();
+  return { ok: true, tasks: tasks };
 }
 
-function updStats(){
-  const bar=document.getElementById('sbar');
-  bar.innerHTML=visibleCats().map(c=>{
-    const n=tasks.filter(t=>t.status===c.id).length;
-    return `<div class="stat${statFilter===c.id?' af':''}" data-s="${c.id}" onclick="statF('${c.id}')"><div class="snum" style="color:${c.color}">${n}</div><div class="slbl">${esc(c.label)}</div></div>`;
-  }).join('');
+function addTask(b) {
+  const id   = uid();
+  const hist = [{ who: b.userName || '', what: 'Создал задачу', when: nowStr() }];
+  taskSheet(b.chatId).appendRow([
+    id, b.chatId, b.title || '', b.desc || '', b.assignee || '',
+    b.date || todayStr(), b.priority || 'medium', b.status || 'todo',
+    b.userName || '', nowStr(),
+    JSON.stringify(b.subtasks || []), JSON.stringify(hist),
+    b.taskGroup || '', b.dependsOn || '', b.sortOrder || new Date().getTime()
+  ]);
+  return { ok: true, id: id, history: hist, sortOrder: b.sortOrder || new Date().getTime() };
 }
 
-function renderTasks(){
-  if(curTab==='history'){ renderHistory(); return; }
-  if(curTab==='report'){ renderReport(); return; }
-  const wrap=document.getElementById('twrap');
-  const f=getFiltered(); updStats();
-  if(!f.length){ wrap.innerHTML='<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
-  f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; const pp={high:0,medium:1,low:2}; return (pp[a.priority]??1)-(pp[b.priority]??1); });
-  const pc={high:'ph',medium:'pm',low:'pl'};
-  const pt={high:'↑ Выс.',medium:'→ Ср.',low:'↓ Низ.'};
-  let html='', lastSt=null;
-  f.forEach(task=>{
-    if(task.status!==lastSt){ const c=catById(task.status); html+=`<div class="glbl">${c.icon} ${c.label.toUpperCase()}</div>`; lastSt=task.status; }
-    const cat=catById(task.status);
-    const subs=task.subtasks||[], ds=subs.filter(s=>s.done).length;
-    html+=`<div class="tc ${task.status==='done'?'tdone':''}" data-id="${task.id}">
-      <div class="tm"><div class="tdot" style="background:${cat.color}"></div><div class="tb">
-        <div class="tt">${esc(task.title)}</div>
-        <div class="tmeta">
-          ${task.assignee?`<span class="tass">👤 ${esc(task.assignee)}</span>`:''}
-          <span class="tpr ${pc[task.priority]||'pm'}">${pt[task.priority]||''}</span>
-          ${task.comments?.length?`<span class="tcomm">💬${task.comments.length}</span>`:''}
-          ${subs.length?`<span class="tsub">☑${ds}/${subs.length}</span>`:''}
-          ${task.date?`<span class="tass">📅${fmtTaskDate(task.date)}</span>`:''}
-        </div>
-      </div><div class="tpill" style="background:${cat.color}1f;color:${cat.color}">${cat.label}</div></div>
-      ${subs.length?`<div class="sbar2">${subs.map(s=>`<div class="sitem ${s.done?'sd':''}" data-tid="${task.id}" data-sid="${s.id}"><div class="schk ${s.done?'ck':''}" onclick="event.stopPropagation();togSub('${task.id}','${s.id}')">${s.done?'✓':''}</div><span>${esc(s.title)}</span></div>`).join('')}</div>`:''}
-    </div>`;
+function updateStatus(b) {
+  const sh   = taskSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) {
+      sh.getRange(i + 1, 8).setValue(b.status);
+      var hist = [];
+      try { hist = JSON.parse(data[i][11] || '[]'); } catch (e) {}
+      hist.push({ who: b.userName, what: 'Сменил статус на ' + statusLabel(b.status, b.chatId), when: nowStr() });
+      sh.getRange(i + 1, 12).setValue(JSON.stringify(hist));
+      return { ok: true };
+    }
+  }
+  return { ok: false };
+}
+
+function updateTask(b) {
+  const sh   = taskSheet(b.chatId);
+  ensureTaskColumns(sh);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) {
+      if (b.dependsOn !== undefined && b.dependsOn && wouldCreateDependencyCycle(b.chatId, b.id, b.dependsOn)) {
+        return { ok: false, error: 'Нельзя создать циклическую зависимость задач' };
+      }
+      var oldAssignee = data[i][4];
+      var changes = [];
+      if (b.title    !== undefined) { sh.getRange(i + 1, 3).setValue(b.title); changes.push('тему'); }
+      if (b.desc     !== undefined) { sh.getRange(i + 1, 4).setValue(b.desc); changes.push('описание'); }
+      if (b.assignee !== undefined) { sh.getRange(i + 1, 5).setValue(b.assignee); }
+      if (b.date     !== undefined) { sh.getRange(i + 1, 6).setValue(b.date); changes.push('дедлайн'); }
+      if (b.priority !== undefined) { sh.getRange(i + 1, 7).setValue(b.priority); changes.push('срочность'); }
+      if (b.subtasks !== undefined) sh.getRange(i + 1, 11).setValue(JSON.stringify(b.subtasks));
+      if (b.taskGroup !== undefined) { sh.getRange(i + 1, 13).setValue(b.taskGroup); changes.push('группу'); }
+      if (b.dependsOn !== undefined) { sh.getRange(i + 1, 14).setValue(b.dependsOn); changes.push('зависимость'); }
+      if (b.sortOrder !== undefined) sh.getRange(i + 1, 15).setValue(b.sortOrder);
+      var hist = [];
+      try { hist = JSON.parse(data[i][11] || '[]'); } catch (e) {}
+      if (b.assignee !== undefined && String(b.assignee) !== String(oldAssignee || '')) {
+        var fromTxt = oldAssignee ? oldAssignee : 'не назначен';
+        var toTxt   = b.assignee ? b.assignee : 'не назначен';
+        hist.push({ who: b.userName, what: 'Передал задачу: ' + fromTxt + ' → ' + toTxt, when: nowStr() });
+      }
+      if (changes.length) {
+        hist.push({ who: b.userName, what: 'Изменил: ' + changes.join(', '), when: nowStr() });
+      }
+      sh.getRange(i + 1, 12).setValue(JSON.stringify(hist));
+      return { ok: true };
+    }
+  }
+  return { ok: false };
+}
+
+function wouldCreateDependencyCycle(chatId, taskId, dependsOn) {
+  if (String(taskId) === String(dependsOn)) return true;
+  var data = taskSheet(chatId).getDataRange().getValues();
+  var parent = {};
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    parent[String(data[i][0])] = String(data[i][13] || '');
+  }
+  parent[String(taskId)] = String(dependsOn || '');
+  var seen = {};
+  var cur = String(dependsOn || '');
+  while (cur) {
+    if (cur === String(taskId)) return true;
+    if (seen[cur]) return true;
+    seen[cur] = true;
+    cur = parent[cur] || '';
+  }
+  return false;
+}
+
+function deleteTask(b) {
+  const sh   = taskSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) { sh.deleteRow(i + 1); return { ok: true }; }
+  }
+  return { ok: false };
+}
+
+function toggleSubtask(b) {
+  const sh   = taskSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.taskId)) {
+      var subs = [];
+      try { subs = JSON.parse(data[i][10] || '[]'); } catch (e) {}
+      var s = null;
+      for (var j = 0; j < subs.length; j++) { if (subs[j].id === b.subId) { s = subs[j]; break; } }
+      if (s) s.done = !s.done;
+      sh.getRange(i + 1, 11).setValue(JSON.stringify(subs));
+      return { ok: true };
+    }
+  }
+  return { ok: false };
+}
+
+function reorderTasks(b) {
+  if (!b.orders || !b.orders.length) return { ok: true };
+  const sh = taskSheet(b.chatId);
+  ensureTaskColumns(sh);
+  const data = sh.getDataRange().getValues();
+  var byId = {};
+  b.orders.forEach(function(o) { byId[String(o.id)] = o; });
+  for (var i = 1; i < data.length; i++) {
+    var o = byId[String(data[i][0])];
+    if (!o) continue;
+    if (o.status !== undefined) sh.getRange(i + 1, 8).setValue(o.status);
+    if (o.taskGroup !== undefined) sh.getRange(i + 1, 13).setValue(o.taskGroup);
+    if (o.sortOrder !== undefined) sh.getRange(i + 1, 15).setValue(o.sortOrder);
+  }
+  return { ok: true };
+}
+
+function reportSettingsSheet(chatId) {
+  return getSheet('ReportSettings_' + chatId, ['key', 'value']);
+}
+
+function defaultReportSettings() {
+  return { morning: '09:00', evening: '18:00', weekly: '17:00', monthly: '10:00' };
+}
+
+function getReportSettings(b) {
+  var out = defaultReportSettings();
+  const data = reportSettingsSheet(b.chatId).getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] && data[i][1]) out[String(data[i][0])] = String(data[i][1]);
+  }
+  return { ok: true, settings: out };
+}
+
+function saveReportSettings(b) {
+  const sh = reportSettingsSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  ['morning', 'evening', 'weekly', 'monthly'].forEach(function(k) {
+    if (!b[k]) return;
+    var found = false;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === k) { sh.getRange(i + 1, 2).setValue(b[k]); found = true; break; }
+    }
+    if (!found) sh.appendRow([k, b[k]]);
   });
-  wrap.innerHTML=html;
-  wrap.querySelectorAll('.tc').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
+  return { ok: true };
 }
 
-// ============================================================
-// HISTORY VIEW
-// ============================================================
-function renderHistory(){
-  const wrap=document.getElementById('twrap');
-  let entries=[];
-  tasks.forEach(t=>(t.history||[]).forEach(h=>entries.push({...h,taskTitle:t.title})));
-  entries.sort((a,b)=>b.when.localeCompare(a.when));
-  const periods=[{v:'day',l:'День'},{v:'week',l:'Неделя'},{v:'month',l:'Месяц'},{v:'quarter',l:'Квартал'},{v:'year',l:'Год'},{v:'all',l:'Всё'}];
-  let sp=lsGet('hperiod')||'day';
-  const now=new Date();
-  function inP(w){
-    const d=new Date(w.replace(/(\d{2})\.(\d{2})\.(\d{4})/,'$3-$2-$1'));
-    if(sp==='all')return true;
-    if(sp==='day')return d.toDateString()===curDate.toDateString();
-    if(sp==='week'){const wk=new Date(now);wk.setDate(now.getDate()-7);return d>=wk;}
-    if(sp==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
-    if(sp==='quarter'){const q=Math.floor(now.getMonth()/3);return Math.floor(d.getMonth()/3)===q&&d.getFullYear()===now.getFullYear();}
-    if(sp==='year')return d.getFullYear()===now.getFullYear();
-    return true;
-  }
-  function build(){
-    const fe=entries.filter(e=>inP(e.when));
-    let h=`<div class="hfrow">${periods.map(p=>`<button class="chip ${sp===p.v?'on':''}" onclick="hPer('${p.v}')">${p.l}</button>`).join('')}</div>`;
-    if(!fe.length)h+='<div class="empty"><div class="eico">🔍</div><div>Нет записей</div></div>';
-    fe.forEach(e=>{ h+=`<div class="hentry"><div class="hwho">${esc(e.who)}</div><div class="hwhat"><strong>${esc(e.taskTitle)}</strong><br>${esc(e.what)}</div><div class="hwhen">${e.when}</div></div>`; });
-    return h;
-  }
-  wrap.innerHTML=build();
-  window.hPer=function(p){sp=p;lsSet('hperiod',p);wrap.innerHTML=build();};
+// ================================================================
+// КОММЕНТАРИИ — лист Comments_<chatId>
+// ================================================================
+function commentSheet(chatId) {
+  return getSheet('Comments_' + chatId, ['id', 'taskId', 'author', 'text', 'time']);
 }
 
-// ============================================================
-// REPORT VIEW
-// ============================================================
-function extractAssigneeChain(task){
-  const chain=[];
-  (task.history||[]).forEach(h=>{
-    const m=String(h.what||'').match(/^Передал задачу: (.+) → (.+)$/);
-    if(m){
-      const from=m[1]==='не назначен'?'':m[1];
-      const to=m[2]==='не назначен'?'':m[2];
-      if(from&&!chain.includes(from))chain.push(from);
-      if(to&&!chain.includes(to))chain.push(to);
+function getCommentMap(chatId) {
+  const data = commentSheet(chatId).getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < data.length; i++) {
+    var taskId = data[i][1];
+    if (!taskId) continue;
+    if (!map[taskId]) map[taskId] = [];
+    map[taskId].push({ id: data[i][0], author: data[i][2], text: data[i][3], time: data[i][4] });
+  }
+  return map;
+}
+
+function addComment(b) {
+  const id   = uid();
+  const time = Utilities.formatDate(new Date(), TZ, 'HH:mm');
+  commentSheet(b.chatId).appendRow([id, b.taskId, b.author || b.userName || '', b.text || '', time]);
+  return { ok: true, id: id, time: time };
+}
+
+function birthdaySheet(chatId) {
+  return getSheet('BirthdayContacts_' + chatId, ['id', 'name', 'date', 'createdAt']);
+}
+
+function getBirthdayContacts(b) {
+  const data = birthdaySheet(b.chatId).getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    var rawDate = data[i][2];
+    var dateStr = Object.prototype.toString.call(rawDate) === '[object Date]' ? Utilities.formatDate(rawDate, TZ, 'yyyy-MM-dd') : String(rawDate || '');
+    if (data[i][0]) out.push({ id: data[i][0], name: data[i][1], date: dateStr });
+  }
+  return { ok: true, contacts: out };
+}
+
+function addBirthdayContact(b) {
+  if (!b.name || !b.date) return { ok: false, error: 'Нужны имя и дата' };
+  var id = uid();
+  birthdaySheet(b.chatId).appendRow([id, b.name, b.date, nowStr()]);
+  return { ok: true, id: id };
+}
+
+function deleteBirthdayContact(b) {
+  const sh = birthdaySheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) { sh.deleteRow(i + 1); return { ok: true }; }
+  }
+  return { ok: false, error: 'Контакт не найден' };
+}
+
+// ================================================================
+// КАТЕГОРИИ ЗАДАЧ — лист Categories_<chatId>
+// Общие для группы. Управляются ассистентом. Дефолтные 4 создаются
+// автоматически при первом обращении, если лист пуст.
+// ================================================================
+var CAT_HDR = ['id', 'label', 'color', 'icon', 'order', 'visible'];
+var DEFAULT_CATEGORIES = [
+  { id: 'todo',        label: 'В очереди', color: '#60a5fa', icon: '🔵', order: 0, visible: true },
+  { id: 'in-progress', label: 'В работе',  color: '#fbbf24', icon: '🟡', order: 1, visible: true },
+  { id: 'done',        label: 'Готово',    color: '#34d399', icon: '🟢', order: 2, visible: true },
+  { id: 'cancelled',   label: 'Отменено',  color: '#f87171', icon: '🔴', order: 3, visible: true }
+];
+
+function categorySheet(chatId) {
+  return getSheet('Categories_' + chatId, CAT_HDR);
+}
+
+function getCategoriesRaw(chatId) {
+  const sh   = categorySheet(chatId);
+  const data = sh.getDataRange().getValues();
+  if (data.length <= 1) {
+    // Лист пуст — заполняем дефолтными категориями один раз
+    DEFAULT_CATEGORIES.forEach(function(c) {
+      sh.appendRow([c.id, c.label, c.color, c.icon, c.order, c.visible]);
+    });
+    return DEFAULT_CATEGORIES.map(function(c) { return Object.assign({}, c); });
+  }
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    out.push({
+      id: data[i][0], label: data[i][1], color: data[i][2] || '#9aa0a6',
+      icon: data[i][3] || '⚪', order: Number(data[i][4]) || 0,
+      visible: data[i][5] === true || data[i][5] === 'true' || data[i][5] === 1
+    });
+  }
+  out.sort(function(a, b) { return a.order - b.order; });
+  return out;
+}
+
+function getCategories(b) {
+  return { ok: true, categories: getCategoriesRaw(b.chatId) };
+}
+
+function addCategory(b) {
+  if (!b.label) return { ok: false, error: 'Нужно название категории' };
+  const sh   = categorySheet(b.chatId);
+  const cats = getCategoriesRaw(b.chatId);
+  const id   = (b.id && String(b.id).trim()) || uid();
+  if (cats.some(function(c) { return c.id === id; })) {
+    return { ok: false, error: 'Категория с таким id уже существует' };
+  }
+  const order = cats.length;
+  sh.appendRow([id, b.label, b.color || '#9aa0a6', b.icon || '⚪', order, b.visible !== false]);
+  return { ok: true, id: id };
+}
+
+function updateCategory(b) {
+  const sh   = categorySheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) {
+      if (b.label   !== undefined) sh.getRange(i + 1, 2).setValue(b.label);
+      if (b.color   !== undefined) sh.getRange(i + 1, 3).setValue(b.color);
+      if (b.icon    !== undefined) sh.getRange(i + 1, 4).setValue(b.icon);
+      if (b.order   !== undefined) sh.getRange(i + 1, 5).setValue(b.order);
+      if (b.visible !== undefined) sh.getRange(i + 1, 6).setValue(b.visible);
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: 'Категория не найдена' };
+}
+
+function deleteCategory(b) {
+  const sh   = categorySheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  // Защита: нельзя удалить, если на эту категорию назначены задачи
+  const tdata = taskSheet(b.chatId).getDataRange().getValues();
+  for (var j = 1; j < tdata.length; j++) {
+    if (tdata[j][0] && String(tdata[j][7]) === String(b.id)) {
+      return { ok: false, error: 'Есть задачи с этой категорией — сначала переназначьте их' };
+    }
+  }
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) { sh.deleteRow(i + 1); return { ok: true }; }
+  }
+  return { ok: false, error: 'Категория не найдена' };
+}
+
+// ================================================================
+// ПОДПИСИ РОЛЕЙ — лист RoleLabels_<chatId>
+// Общие для группы. Переименование отображаемого названия роли
+// без изменения прав доступа (права завязаны на id: manager/director/assistant).
+// ================================================================
+function roleLabelSheet(chatId) {
+  return getSheet('RoleLabels_' + chatId, ['roleId', 'label']);
+}
+
+function getRoleLabels(b) {
+  const data = roleLabelSheet(b.chatId).getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) map[data[i][0]] = data[i][1];
+  }
+  return { ok: true, labels: map };
+}
+
+function setRoleLabel(b) {
+  if (!b.roleId || !b.label) return { ok: false, error: 'Нужны roleId и label' };
+  const sh   = roleLabelSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.roleId)) {
+      sh.getRange(i + 1, 2).setValue(b.label);
+      return { ok: true };
+    }
+  }
+  sh.appendRow([b.roleId, b.label]);
+  return { ok: true };
+}
+
+// ================================================================
+// ЗАПРОСЫ НА РОЛЬ АССИСТЕНТА — лист RoleRequests_<chatId>
+// Любой участник может запросить роль ассистента. Если ни один из
+// текущих ассистентов не отклонит запрос в течение 7 дней — запрос
+// автоматически удовлетворяется (резервный способ восстановить доступ).
+// ================================================================
+var ROLE_REQUEST_DAYS = 7;
+
+function roleRequestSheet(chatId) {
+  return getSheet('RoleRequests_' + chatId, ['id', 'userId', 'userName', 'requestedAt', 'expiresAt', 'status']);
+}
+
+function getRoleRequests(b) {
+  const data = roleRequestSheet(b.chatId).getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    out.push({
+      id: data[i][0], userId: String(data[i][1]), userName: data[i][2],
+      requestedAt: data[i][3], expiresAt: data[i][4], status: data[i][5]
+    });
+  }
+  return { ok: true, requests: out };
+}
+
+function requestAssistantRole(b) {
+  if (!b.userId) return { ok: false, error: 'Нужен userId' };
+  const sh   = roleRequestSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][1]) === String(b.userId) && data[i][5] === 'pending') {
+      return { ok: false, error: 'У вас уже есть активный запрос' };
+    }
+  }
+  const member = getMember(b.chatId, b.userId);
+  if (member && member.role === 'assistant') {
+    return { ok: false, error: 'У вас уже есть роль ассистента' };
+  }
+  const id = uid();
+  const now = new Date();
+  const expires = new Date(now.getTime() + ROLE_REQUEST_DAYS * 24 * 60 * 60 * 1000);
+  sh.appendRow([id, String(b.userId), b.userName || (member ? member.name : ''), nowStr(), Utilities.formatDate(expires, TZ, 'dd.MM.yyyy HH:mm'), 'pending']);
+
+  // Уведомляем всех текущих ассистентов группы
+  const assistants = getAllMembers(b.chatId).filter(function(m) { return m.role === 'assistant'; });
+  assistants.forEach(function(a) {
+    tgSend(a.userId, '🔔 ' + (b.userName || 'Участник') + ' запросил роль ассистента в группе.\n\nОткройте планировщик, чтобы одобрить или отклонить запрос. Если запрос не будет отклонён в течение 7 дней, роль будет назначена автоматически.');
+  });
+  return { ok: true, id: id };
+}
+
+function resolveRoleRequest(b) {
+  // b.decision: 'approve' | 'deny'
+  const sh   = roleRequestSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) {
+      if (data[i][5] !== 'pending') return { ok: false, error: 'Запрос уже обработан' };
+      const requestUserId = data[i][1];
+      const requestUserName = data[i][2];
+      if (b.decision === 'approve') {
+        sh.getRange(i + 1, 6).setValue('approved');
+        setMemberRoleById(b.chatId, requestUserId, 'assistant');
+        tgSend(requestUserId, '✅ Ваш запрос на роль ассистента одобрен.');
+      } else {
+        sh.getRange(i + 1, 6).setValue('denied');
+        tgSend(requestUserId, '❌ Ваш запрос на роль ассистента отклонён.');
+      }
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: 'Запрос не найден' };
+}
+
+// Проверяет все группы на истёкшие запросы и автоматически их удовлетворяет.
+// Запускается по таймеру (раз в день достаточно для недельного окна).
+function processExpiredRoleRequests() {
+  getAllGroups().forEach(function(g) {
+    const sh   = roleRequestSheet(g.chatId);
+    const data = sh.getDataRange().getValues();
+    const now  = new Date();
+    for (var i = 1; i < data.length; i++) {
+      if (!data[i][0] || data[i][5] !== 'pending') continue;
+      var expiresAt = data[i][4];
+      var expDate;
+      try {
+        var parts = String(expiresAt).match(/(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})/);
+        expDate = parts ? new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]) : new Date(expiresAt);
+      } catch (e) { continue; }
+      if (isNaN(expDate.getTime()) || expDate > now) continue;
+      // Срок истёк, запрос всё ещё pending — автоматически одобряем
+      sh.getRange(i + 1, 6).setValue('approved');
+      var requestUserId = data[i][1];
+      setMemberRoleById(g.chatId, requestUserId, 'assistant');
+      tgSend(requestUserId, '✅ Неделя истекла без отказа — вам автоматически назначена роль ассистента.');
+      var assistants = getAllMembers(g.chatId).filter(function(m) { return m.role === 'assistant' && String(m.userId) !== String(requestUserId); });
+      assistants.forEach(function(a) {
+        tgSend(a.userId, 'ℹ️ Запрос на роль ассистента от ' + data[i][2] + ' был автоматически одобрен (истекла неделя без отказа).');
+      });
     }
   });
-  if(task.assignee&&!chain.includes(task.assignee))chain.push(task.assignee);
+}
+
+// ================================================================
+// СОСТАВ — лист Staff_<chatId>
+// ================================================================
+function staffSheet(chatId) {
+  return getSheet('Staff_' + chatId, ['id', 'name', 'role', 'tgId', 'addedAt']);
+}
+
+function getStaff(b) {
+  const members = getAllMembers(b.chatId);
+  var staff = members.map(function(m) {
+    return { id: m.userId, name: m.name, role: m.role, tgId: m.userId };
+  });
+  const sh   = staffSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) staff.push({ id: data[i][0], name: data[i][1], role: data[i][2], tgId: '' });
+  }
+  return { ok: true, staff: staff };
+}
+
+function addStaff(b) {
+  const id = uid();
+  staffSheet(b.chatId).appendRow([id, b.name || '', b.role || 'manager', b.tgId || '', nowStr()]);
+  return { ok: true, id: id };
+}
+
+function delStaff(b) {
+  const msh  = memberSheet(b.chatId);
+  const mdat = msh.getDataRange().getValues();
+  for (var i = 1; i < mdat.length; i++) {
+    if (String(mdat[i][0]) === String(b.id)) { msh.deleteRow(i + 1); return { ok: true }; }
+  }
+  const sh   = staffSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var j = 1; j < data.length; j++) {
+    if (String(data[j][0]) === String(b.id)) { sh.deleteRow(j + 1); return { ok: true }; }
+  }
+  return { ok: false };
+}
+
+function updateStaffRole(b) {
+  if (setMemberRoleById(b.chatId, b.id, b.role)) return { ok: true };
+  const sh   = staffSheet(b.chatId);
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(b.id)) {
+      sh.getRange(i + 1, 3).setValue(b.role);
+      return { ok: true };
+    }
+  }
+  return { ok: false };
+}
+
+// ================================================================
+// ОТЧЁТ
+// ================================================================
+function extractAssigneeChain(task) {
+  var chain = [];
+  (task.history || []).forEach(function(h) {
+    var m = String(h.what || '').match(/^Передал задачу: (.+) → (.+)$/);
+    if (m) {
+      var from = m[1] === 'не назначен' ? '' : m[1];
+      var to   = m[2] === 'не назначен' ? '' : m[2];
+      if (from && chain.indexOf(from) === -1) chain.push(from);
+      if (to   && chain.indexOf(to)   === -1) chain.push(to);
+    }
+  });
+  if (task.assignee && chain.indexOf(task.assignee) === -1) chain.push(task.assignee);
   return chain;
 }
 
-function renderReport(){
-  const wrap=document.getElementById('twrap');
-  const cats=visibleCats();
-  const by={};
-  tasks.forEach(t=>{
-    let chain=extractAssigneeChain(t);
-    if(!chain.length)chain=['Не назначен'];
-    chain.forEach(a=>{
-      if(!by[a]){by[a]={}; cats.forEach(c=>by[a][c.id]=0);}
-      if(by[a][t.status]===undefined) by[a][t.status]=0;
-      by[a][t.status]++;
-    });
-  });
-  let h=`<div style="margin-bottom:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
-    ${isAssistant(ME.role)?`<button class="btn btn-s" style="max-width:170px;padding:8px" onclick="openPublishUI()">📤 Опубликовать в группу</button>`:''}
-    <button class="btn btn-p" style="max-width:160px;padding:8px" onclick="downloadReport()">📥 Скачать Excel</button>
-  </div>`;
-  h+=`<div style="background:var(--surf);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-    <div style="display:grid;grid-template-columns:1fr repeat(${cats.length},auto);gap:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--brd)">
-      <div>Сотрудник</div>${cats.map(c=>`<div style="text-align:center;color:${c.color}">${esc(c.label.slice(0,6))}</div>`).join('')}
-    </div>`;
-  Object.entries(by).forEach(([n,v])=>{
-    h+=`<div style="display:grid;grid-template-columns:1fr repeat(${cats.length},auto);gap:0;padding:9px 12px;border-bottom:1px solid var(--brd);font-size:13px;align-items:center">
-      <div style="font-weight:600">👤 ${esc(n)}</div>${cats.map(c=>`<div style="text-align:center;font-weight:700;color:${c.color}">${v[c.id]||0}</div>`).join('')}
-    </div>`;
-  });
-  h+='</div>';
-  wrap.innerHTML=h;
-}
-
-async function downloadReport(){
-  showToast('Запрашиваем отчёт...');
-  const r=await api('getReport');
-  if(!r.ok){showToast('Ошибка получения отчёта');return;}
-  // Build CSV for download
-  let csv='ID,Задача,Описание,Исполнитель,Дедлайн,Приоритет,Статус,Создал\n';
-  r.tasks.forEach(t=>{
-    csv+=[t.id,t.title,t.desc,t.assignee,t.date,t.priority,t.status,t.createdBy].map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')+'\n';
-  });
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='report_'+new Date().toISOString().split('T')[0]+'.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Отчёт скачан (CSV). Excel-файл придёт в группу в пятницу автоматически.');
-}
-
-let selectedPeriod='day';
-function openPublishUI(){
-  selectedPeriod='day';
-  document.querySelectorAll('#pubOv .sopt').forEach(o=>o.classList.toggle('sel',o.dataset.period==='day'));
-  document.getElementById('pubCustomRange').style.display='none';
-  const today=new Date().toISOString().split('T')[0];
-  document.getElementById('pubFrom').value=today;
-  document.getElementById('pubTo').value=today;
-  openOv('pubOv');
-}
-function selectPeriod(p){
-  selectedPeriod=p;
-  document.querySelectorAll('#pubOv .sopt').forEach(o=>o.classList.toggle('sel',o.dataset.period===p));
-  document.getElementById('pubCustomRange').style.display=p==='custom'?'block':'none';
-}
-async function confirmPublish(){
-  const btn=document.getElementById('pubBtn'); btn.disabled=true; btn.textContent='Публикуем...';
-  const payload={period:selectedPeriod};
-  if(selectedPeriod==='custom'){
-    payload.from=document.getElementById('pubFrom').value;
-    payload.to=document.getElementById('pubTo').value;
-  }
-  const r=await api('publishReportNow',payload);
-  btn.disabled=false; btn.textContent='Опубликовать';
-  if(r.ok){ closeOv('pubOv'); showToast('Отчёт опубликован в группе ✓'); }
-  else showToast(r.error||'Не удалось опубликовать');
-}
-
-// ============================================================
-// SUBTASK TOGGLE
-// ============================================================
-async function togSub(taskId,subId){
-  await api('toggleSubtask',{taskId,subId});
-  const t=tasks.find(x=>x.id===taskId);
-  if(t){const s=(t.subtasks||[]).find(x=>x.id===subId);if(s)s.done=!s.done;}
-  renderTasks();
-}
-
-// ============================================================
-// DETAIL
-// ============================================================
-function openDetail(id){ selTask=tasks.find(t=>t.id===id); if(!selTask)return; renderDetail(); openOv('detOv'); }
-
-function renderDetail(){
-  const t=selTask;
-  const cat=catById(t.status);
-  const commH=(t.comments||[]).map(c=>`<div class="ci"><div class="cauth">${esc(c.author)}</div><div class="ctxt">${esc(c.text)}</div><div class="ctime">${c.time||''}</div></div>`).join('')||'<div style="font-size:12px;color:var(--muted);padding:5px 0">Нет комментариев</div>';
-  const assigneeRow = canEdit(ME.role)
-    ? `<div class="fg" style="margin:8px 0"><label class="fl">Исполнитель</label><select class="fs" id="detAss" style="max-width:100%" onchange="reassignTask('${t.id}', this.value)">
-        <option value="">— не назначен —</option>
-        ${staff.map(s=>`<option value="${esc(s.name)}" ${t.assignee===s.name?'selected':''}>${esc(s.name)}</option>`).join('')}
-      </select></div>`
-    : (t.assignee?`<div class="det-row"><span class="lbl">Исполнитель</span><strong>${esc(t.assignee)}</strong></div>`:'');
-  document.getElementById('detCont').innerHTML=`
-    <div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:10px">
-      <div style="font-size:15px;font-weight:700;line-height:1.3;flex:1">${esc(t.title)}</div>
-      <div class="tpill" style="background:${cat.color}1f;color:${cat.color}">${cat.label}</div>
-    </div>
-    ${t.desc?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">${esc(t.desc)}</div>`:''}
-    ${assigneeRow}
-    ${t.date?`<div class="det-row"><span class="lbl">Дедлайн</span>${fmtTaskDate(t.date)}</div>`:''}
-    ${t.createdBy?`<div class="det-row"><span class="lbl">Создал</span>${esc(t.createdBy)}</div>`:''}
-    <div class="divhr"></div>
-    <div class="fl" style="margin-bottom:7px">Изменить статус</div>
-    <div class="sgrid">${visibleCats().map(c=>`<div class="sopt ${t.status===c.id?'sel':''}" onclick="chStatus('${t.id}','${c.id}')"><span class="si">${c.icon}</span>${c.label}</div>`).join('')}</div>
-    <div class="divhr"></div>
-    <div class="fl" style="margin-bottom:7px">Комментарии</div>
-    <div class="clist">${commH}</div>
-    <div class="crow"><input class="fi" id="cInp" placeholder="Написать..." style="flex:1;max-width:none"><button class="sndBtn" onclick="sendComm()">➤</button></div>
-    ${canHist(ME.role)?`<div class="divhr"></div><button class="btn btn-s" onclick="openTaskHist('${t.id}')" style="width:100%">📜 История изменений</button>`:''}
-    ${canEdit(ME.role)?`<div class="divhr"></div><button class="btn btn-d" onclick="delTask('${t.id}')" style="width:100%">🗑 Удалить</button>`:''}
-    <button class="btn btn-s" onclick="closeOv('detOv')" style="width:100%;margin-top:7px">Закрыть</button>
-  `;
-  document.getElementById('cInp').addEventListener('keydown',e=>{if(e.key==='Enter')sendComm();});
-}
-
-async function reassignTask(id, newAssignee){
-  const t=tasks.find(x=>x.id===id); if(!t) return;
-  const oldAssignee=t.assignee;
-  if(oldAssignee===newAssignee) return;
-  const r=await api('updateTask',{id,assignee:newAssignee});
-  if(r.ok){
-    t.assignee=newAssignee;
-    t.history=t.history||[];
-    t.history.push({who:ME.name,what:'Передал задачу: '+(oldAssignee||'не назначен')+' → '+(newAssignee||'не назначен'),when:nowStr()});
-    renderTasks();
-    showToast(newAssignee?('Передано: '+newAssignee):'Снято назначение');
-  } else showToast('Ошибка передачи задачи');
-}
-
-async function chStatus(id,status){
-  const r=await api('updateStatus',{id,status});
-  if(!r.ok){showToast('Ошибка');return;}
-  const t=tasks.find(x=>x.id===id);
-  if(t){t.status=status;t.history=t.history||[];t.history.push({who:ME.name,what:'Сменил статус → '+sLbl(status),when:nowStr()});}
-  showToast('Статус: '+sLbl(status));
-  if(selTask?.id===id){selTask.status=status;renderDetail();}
-  renderTasks();
-}
-
-async function sendComm(){
-  const inp=document.getElementById('cInp');
-  const text=inp.value.trim(); if(!text)return;
-  inp.value='';
-  const r=await api('addComment',{taskId:selTask.id,text});
-  selTask.comments=selTask.comments||[];
-  selTask.comments.push({author:ME.name,text,time:r.time||nowTime()});
-  renderDetail(); showToast('Комментарий добавлен');
-}
-
-async function delTask(id){
-  if(!confirm('Удалить задачу?'))return;
-  await api('deleteTask',{id}); tasks=tasks.filter(t=>t.id!==id);
-  closeOv('detOv'); renderAll(); showToast('Задача удалена');
-}
-
-function openTaskHist(id){
-  const t=tasks.find(x=>x.id===id); if(!t)return;
-  const entries=t.history||[];
-  document.getElementById('histCont').innerHTML=entries.length
-    ?entries.map(e=>`<div class="hentry"><div class="hwho">${esc(e.who)}</div><div class="hwhat">${esc(e.what)}</div><div class="hwhen">${e.when}</div></div>`).join('')
-    :'<div style="color:var(--muted);font-size:13px">Пусто</div>';
-  openOv('histOv');
-}
-
-function fillAssigneeSelect(){
-  const sel=document.getElementById('nAss');
-  sel.innerHTML='<option value="">— не назначен —</option>'+staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
-}
-
-function openAdd(){
-  if(!canCreate(ME.role)){showToast('Нет прав');return;}
-  document.getElementById('nTitle').value='';
-  document.getElementById('nSub').value='';
-  document.getElementById('nComment').value='';
-  document.getElementById('nDL').value=curDate.toISOString().split('T')[0];
-  document.getElementById('nDLTime').value='';
-  document.getElementById('nPr').value='medium';
-  fillAssigneeSelect();
-  openOv('addOv');
-}
-
-async function confirmAdd(){
-  const title=document.getElementById('nTitle').value.trim();
-  if(!title){showToast('Введите тему задачи');return;}
-  const sub=document.getElementById('nSub').value.trim();
-  const comment=document.getElementById('nComment').value.trim();
-  const ass=document.getElementById('nAss').value;
-  const dl=document.getElementById('nDL').value;
-  const dlTime=document.getElementById('nDLTime').value;
-  const fullDate=dl+(dlTime?(' '+dlTime):'');
-  const pr=document.getElementById('nPr').value;
-  const btn=document.getElementById('addBtn'); btn.disabled=true; btn.textContent='Создаём...';
-  const r=await api('addTask',{title,desc:sub,assignee:ass,date:fullDate,priority:pr,status:'todo',subtasks:[]});
-  if(r.ok&&r.id){
-    tasks.unshift({id:r.id,title,desc:sub,assignee:ass,date:fullDate,priority:pr,status:'todo',createdBy:ME.name,subtasks:[],comments:[],history:r.history||[]});
-    if(comment){
-      const cr=await api('addComment',{taskId:r.id,text:comment});
-      tasks[0].comments=[{author:ME.name,text:comment,time:cr.time||nowTime()}];
+function getReport(b) {
+  const res = getTasks(b);
+  if (!res.ok) return res;
+  const cats = getCategoriesRaw(b.chatId);
+  var byA = {};
+  function ensure(a) {
+    if (!byA[a]) {
+      byA[a] = {};
+      cats.forEach(function(c) { byA[a][c.id] = 0; });
     }
   }
-  closeOv('addOv'); renderAll();
-  showToast('Задача создана ✓');
-  btn.disabled=false; btn.textContent='Создать';
+  res.tasks.forEach(function(t) {
+    var chain = extractAssigneeChain(t);
+    if (!chain.length) chain = ['Не назначен'];
+    chain.forEach(function(a) {
+      ensure(a);
+      if (byA[a][t.status] === undefined) byA[a][t.status] = 0;
+      byA[a][t.status]++;
+    });
+  });
+  return { ok: true, tasks: res.tasks, byAssignee: byA, categories: cats };
 }
 
-// ============================================================
-// STAFF
-// ============================================================
-function renderStaff(){
-  const rl={director:'👑 Руководитель',assistant:'🛡 Ассистент',manager:'👤 Менеджер'};
-  const isAsst = ME.role === 'assistant';
-  const roleOpts = ['manager','director','assistant'].map(r=>`<option value="${r}">${rl[r]}</option>`).join('');
-  document.getElementById('staffList').innerHTML = staff.length
-    ? staff.map(s=>`
-      <div class="aitem">
-        <div><div class="aname">${esc(s.name)}</div><div class="arole">${rl[s.role]||s.role}</div></div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${isAsst ? `<select class="fs" style="max-width:130px;padding:4px 8px;font-size:11px" onchange="changeRole('${s.id}',this.value)">${['manager','director','assistant'].map(r=>`<option value="${r}" ${s.role===r?'selected':''}>${rl[r]}</option>`).join('')}</select>` : ''}
-          ${isAsst ? `<button class="delbtn" onclick="delSt('${s.id}')">✕</button>` : ''}
-        </div>
-      </div>`).join('')
-    : '<div style="color:var(--muted);font-size:13px">Нет сотрудников</div>';
-}
-
-async function changeRole(id, newRole){
-  const r = await api('updateStaffRole',{id, role: newRole});
-  if(r.ok){
-    const s=staff.find(x=>x.id===id); if(s)s.role=newRole;
-    // если это текущий пользователь — обновить ME
-    if(ME.id===id){ ME.role=newRole; lsSet('me',ME); document.getElementById('rBadge').textContent=ROLE_LBL[newRole]||newRole; if(canCreate(newRole))document.getElementById('fab').style.display='flex'; else document.getElementById('fab').style.display='none'; }
-    showToast('Роль обновлена');
+// ================================================================
+// УВЕДОМЛЕНИЯ
+// ================================================================
+function getAllGroups() {
+  const data = getSheet('Groups', ['chatId', 'name', 'createdAt']).getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) out.push({ chatId: String(data[i][0]), name: data[i][1] });
   }
-  renderStaff();
+  return out;
 }
 
-async function addStaffMember(){
-  if(!canStaff(ME.role)){showToast('Нет прав');return;}
-  const name=document.getElementById('sName').value.trim();
-  if(!name){showToast('Введите имя');return;}
-  const role=document.getElementById('sRole').value;
-  const r=await api('addStaff',{name,role,tgId:''});
-  if(r.ok){staff.push({id:r.id||'s'+Date.now(),name,role,tgId:''});}
-  document.getElementById('sName').value='';
-  renderStaff(); buildChips(); showToast('Сотрудник добавлен');
+function morningNotify() {
+  getAllGroups().forEach(function(g) {
+    var res = getTasks({ chatId: g.chatId });
+    if (!res.ok) return;
+    var today   = res.tasks.filter(function(t) { return dateOnly(t.date) === todayStr() && t.status !== 'cancelled'; });
+    var overdue = res.tasks.filter(function(t) { return dateOnly(t.date) < todayStr() && t.status !== 'done' && t.status !== 'cancelled'; });
+    today.sort(function(a, b) {
+      var pp = { high: 0, medium: 1, low: 2 };
+      return (pp[a.priority] || 1) - (pp[b.priority] || 1);
+    });
+    var msg = 'Доброе утро! Задачи на ' + fmtDate(new Date()) + ':\n\n';
+    if (!today.length) { msg += 'Задач на сегодня нет.\n'; }
+    today.slice(0, 10).forEach(function(t, i) {
+      var ic = { high: '🔴', medium: '🟡', low: '🟢' }[t.priority] || '•';
+      msg += (i + 1) + '. ' + ic + ' ' + t.title + (t.assignee ? ' — ' + t.assignee : '') + '\n';
+    });
+    if (overdue.length) msg += '\nПросроченных задач: ' + overdue.length;
+    tgSend(g.chatId, msg);
+  });
 }
-async function delSt(id){
-  await api('delStaff',{id}); staff=staff.filter(s=>s.id!==id); renderStaff(); buildChips();
+
+// ================================================================
+// ОТЧЁТЫ С ПОДТВЕРЖДЕНИЕМ АССИСТЕНТА
+// ================================================================
+function buildCategoryCountText(chatId, tasks, label, includeCancelled) {
+  var cats = getCategoriesRaw(chatId);
+  var counts = {}, total = 0, counted = [];
+  cats.forEach(function(c) { counts[c.id] = 0; });
+  tasks.forEach(function(t) {
+    if (!includeCancelled && t.status === 'cancelled') return;
+    if (counts[t.status] === undefined) counts[t.status] = 0;
+    counts[t.status]++;
+    total++;
+    counted.push(t);
+  });
+  var msg = '📊 Отчёт ' + label + ':\n\n';
+  cats.forEach(function(c) {
+    if (!includeCancelled && c.id === 'cancelled') return;
+    msg += c.icon + ' ' + c.label + ': ' + (counts[c.id] || 0) + '\n';
+  });
+  msg += '\nВсего задач: ' + total;
+  return { text: msg, allDone: counted.length > 0 && counted.every(function(t) { return t.status === 'done'; }) };
 }
 
-// ============================================================
-// OVERLAY
-// ============================================================
-function openOv(id){ document.getElementById(id).classList.add('open'); if(id==='staffOv')renderStaff(); if(id==='settOv')openSettUI(); }
-function closeOv(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function buildEveningReportText(chatId) {
+  var res = getTasks({ chatId: chatId });
+  if (!res.ok) return null;
+  var td        = res.tasks.filter(function(t) { return dateOnly(t.date) === todayStr(); });
+  if (!td.length) return { text: null, hasAny: false, allDone: false };
+  var built = buildCategoryCountText(chatId, td, 'за день — ' + fmtDate(new Date()), false);
+  return { text: built.text, hasAny: true, allDone: built.allDone };
+}
 
-// ============================================================
-// HELPERS
-// ============================================================
-function showToast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function sLbl(s){ return catLabel(s); }
-function nowStr(){ const n=new Date(); return n.toLocaleDateString('ru-RU')+' '+n.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
-function nowTime(){ return new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
-function lsSet(k,v){ try{localStorage.setItem('tp2_'+k,JSON.stringify(v));}catch(e){} }
-function lsGet(k){ try{const v=localStorage.getItem('tp2_'+k);return v?JSON.parse(v):null;}catch(e){return null;} }
+function buildWeeklyReportText(chatId) {
+  var res = getTasks({ chatId: chatId });
+  if (!res.ok) return null;
+  var wAgo = new Date(); wAgo.setDate(wAgo.getDate() - 7);
+  var wt   = res.tasks.filter(function(t) { return new Date(dateOnly(t.date)) >= wAgo; });
+  if (!wt.length) return { text: null, hasAny: false, allDone: false };
+  var built = buildCategoryCountText(chatId, wt, 'за неделю', true);
+  return { text: built.text, hasAny: true, allDone: built.allDone };
+}
 
-// ============================================================
-// START
-// ============================================================
-init();
-</script>
-</body>
-</html>
+// Универсальный отчёт за произвольный период (day/week/month/custom), для ручного запроса ассистентом
+function buildPeriodReportText(chatId, period, fromStr, toStr) {
+  var res = getTasks({ chatId: chatId });
+  if (!res.ok) return null;
+  var now = new Date();
+  var from, to, label;
+  if (period === 'day') {
+    from = new Date(now); label = 'за день — ' + fmtDate(now);
+  } else if (period === 'week') {
+    from = new Date(now); from.setDate(from.getDate() - 7); label = 'за неделю';
+  } else if (period === 'month') {
+    from = new Date(now); from.setDate(from.getDate() - 30); label = 'за месяц';
+  } else if (period === 'custom' && fromStr && toStr) {
+    from = new Date(fromStr); to = new Date(toStr); label = 'за период ' + fromStr + ' — ' + toStr;
+  } else {
+    return { text: null, hasAny: false };
+  }
+  if (!to) to = now;
+  if (period === 'custom' && to) to.setDate(to.getDate() + 1);
+  var inRange = res.tasks.filter(function(t) {
+    var d = new Date(dateOnly(t.date));
+    return d >= from && d <= to;
+  });
+  if (!inRange.length) return { text: null, hasAny: false, label: label };
+  var built = buildCategoryCountText(chatId, inRange, label, period !== 'day');
+  return { text: built.text, hasAny: true, label: label };
+}
+
+function publishReportNowAPI(b) {
+  var r = buildPeriodReportText(b.chatId, b.period, b.from, b.to);
+  if (!r || !r.hasAny) {
+    return { ok: false, error: 'Нет задач за выбранный период' };
+  }
+  tgSend(b.chatId, r.text);
+  return { ok: true, text: r.text };
+}
+
+function csvEscape(v) {
+  return '"' + String(v || '').replace(/"/g, '""') + '"';
+}
+
+function periodBounds(period, fromStr, toStr) {
+  var now = new Date(), from, to;
+  if (period === 'day') {
+    from = new Date(todayStr()); to = new Date(todayStr()); to.setDate(to.getDate() + 1);
+  } else if (period === 'week') {
+    from = new Date(now); from.setDate(from.getDate() - 7); to = now;
+  } else if (period === 'month') {
+    from = new Date(now); from.setDate(from.getDate() - 30); to = now;
+  } else if (period === 'custom' && fromStr && toStr) {
+    from = new Date(fromStr); to = new Date(toStr); to.setDate(to.getDate() + 1);
+  } else {
+    from = new Date('1970-01-01'); to = now;
+  }
+  return { from: from, to: to };
+}
+
+function taskInPeriod(t, bounds) {
+  var d = new Date(dateOnly(t.date));
+  return !isNaN(d) && d >= bounds.from && d <= bounds.to;
+}
+
+function getReportCsv(b) {
+  var res = getTasks(b);
+  if (!res.ok) return res;
+  var bounds = periodBounds(b.period || 'day', b.from, b.to);
+  var titleById = {};
+  res.tasks.forEach(function(t) { titleById[String(t.id)] = t.title; });
+  var rows = [['ID','Задача','Описание','Исполнитель','Дедлайн','Приоритет','Статус','Группа задач','Зависит от ID','Зависит от название','Создал','Создано']];
+  res.tasks.filter(function(t) { return taskInPeriod(t, bounds); }).forEach(function(t) {
+    rows.push([t.id, t.title, t.desc, t.assignee, t.date, t.priority, statusLabel(t.status, b.chatId), t.taskGroup, t.dependsOn, titleById[String(t.dependsOn)] || '', t.createdBy, t.createdAt]);
+  });
+  return { ok: true, csv: rows.map(function(r) { return r.map(csvEscape).join(','); }).join('\n') };
+}
+
+function findAssistant(chatId) {
+  var members = getAllMembers(chatId);
+  for (var i = 0; i < members.length; i++) {
+    if (members[i].role === 'assistant') return members[i];
+  }
+  return null;
+}
+
+function pendingKey(chatId, kind) {
+  return 'pending_' + kind + '_' + chatId;
+}
+
+function savePending(chatId, kind, payload) {
+  PropertiesService.getScriptProperties().setProperty(pendingKey(chatId, kind), JSON.stringify(payload));
+}
+function loadPending(chatId, kind) {
+  var raw = PropertiesService.getScriptProperties().getProperty(pendingKey(chatId, kind));
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch (e) { return null; }
+}
+function clearPending(chatId, kind) {
+  PropertiesService.getScriptProperties().deleteProperty(pendingKey(chatId, kind));
+}
+
+function requestReportConfirmation(chatId, kind, reportText, groupName) {
+  var assistant = findAssistant(chatId);
+  if (!assistant) {
+    Logger.log('Нет ассистента в группе ' + chatId + ' — публикуем без подтверждения');
+    publishReport(chatId, kind, reportText);
+    return;
+  }
+  savePending(chatId, kind, { text: reportText, groupName: groupName, createdAt: nowStr(), status: 'waiting' });
+  var label = kind === 'evening' ? 'итоги дня' : 'итоги недели';
+  var msg = '🔔✨📋 Ваше величество, я могу опубликовать ' + label + ' в группе «' + groupName + '»:\n\n' +
+    '— — — — —\n' + reportText + '\n— — — — —\n\nПодтвердите публикацию.';
+  tgSendConfirmButtons(assistant.userId, msg, chatId, kind);
+}
+
+function tgSendConfirmButtons(toUserId, text, chatId, kind) {
+  try {
+    assertBotConfigured();
+    UrlFetchApp.fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      payload: JSON.stringify({
+        chat_id: String(toUserId), text: text,
+        reply_markup: { inline_keyboard: [[
+          { text: '✅ Опубликовать', callback_data: 'rpt_pub_' + kind + '_' + chatId },
+          { text: '❌ Отложить', callback_data: 'rpt_skip_' + kind + '_' + chatId }
+        ]] }
+      })
+    });
+  } catch (e) { Logger.log('tgSendConfirmButtons error: ' + e.toString()); }
+}
+
+function publishReport(chatId, kind, reportText) {
+  tgSend(chatId, reportText);
+  if (kind === 'weekly') {
+    try { buildExcelAndSend(chatId); } catch (e) { Logger.log('Excel error: ' + e); }
+  }
+  clearPending(chatId, kind);
+}
+
+function handleReportCallback(cbq) {
+  var data = cbq.data || '';
+  var m = data.match(/^rpt_(pub|skip)_(evening|weekly)_(.+)$/);
+  if (!m) return false;
+  var action  = m[1];
+  var kind    = m[2];
+  var chatId  = m[3];
+  var byUserId = String(cbq.from.id);
+
+  // Только ассистент этой группы может подтверждать
+  var assistant = findAssistant(chatId);
+  if (!assistant || String(assistant.userId) !== byUserId) {
+    tgSend(byUserId, 'Эту публикацию может подтвердить только ассистент группы.');
+    return true;
+  }
+
+  var p = loadPending(chatId, kind);
+  if (action === 'pub') {
+    var textToPublish = p ? p.text : null;
+    if (!textToPublish) {
+      // pending уже удалён (например, дублирующее нажатие) — пересобираем текст заново
+      var rebuilt = kind === 'evening' ? buildEveningReportText(chatId) : buildWeeklyReportText(chatId);
+      textToPublish = rebuilt && rebuilt.text;
+    }
+    if (textToPublish) {
+      publishReport(chatId, kind, textToPublish);
+      tgSend(byUserId, '✅ Опубликовано в группе.');
+    } else {
+      tgSend(byUserId, 'Нечего публиковать — нет задач за этот период.');
+    }
+  } else {
+    clearPending(chatId, kind);
+    tgSend(byUserId, '❌ Публикация отложена, в группу ничего не отправлено.');
+  }
+  return true;
+}
+
+function eveningConfirmRequest() {
+  getAllGroups().forEach(function(g) {
+    var r = buildEveningReportText(g.chatId);
+    if (!r || !r.hasAny) return;
+    if (r.allDone) { publishReport(g.chatId, 'evening', r.text); return; }
+    requestReportConfirmation(g.chatId, 'evening', r.text, g.name);
+  });
+}
+
+function weeklyConfirmRequest() {
+  getAllGroups().forEach(function(g) {
+    var r = buildWeeklyReportText(g.chatId);
+    if (!r || !r.hasAny) return;
+    if (r.allDone) { publishReport(g.chatId, 'weekly', r.text); return; }
+    requestReportConfirmation(g.chatId, 'weekly', r.text, g.name);
+  });
+}
+
+function eveningNotify() {
+  getAllGroups().forEach(function(g) { resolveTimedOutPending(g.chatId, 'evening', g.name); });
+}
+
+function weeklyEndNotify() {
+  getAllGroups().forEach(function(g) { resolveTimedOutPending(g.chatId, 'weekly', g.name); });
+}
+
+function resolveTimedOutPending(chatId, kind, groupName) {
+  var p = loadPending(chatId, kind);
+  if (!p || p.status !== 'waiting') return; // нет ожидающего — уже опубликовано или отменено вручную, или подтверждения не требовалось
+  // 2 часа истекли без ответа — отменяем публикацию
+  p.status = 'expired';
+  savePending(chatId, kind, p);
+  var assistant = findAssistant(chatId);
+  if (!assistant) return;
+  var label = kind === 'evening' ? 'итогов дня' : 'итогов недели';
+  var msg = '⏰ Время на подтверждение публикации ' + label + ' истекло — отчёт в группу «' + groupName + '» НЕ опубликован.\n\nМожете опубликовать его сейчас вручную:';
+  tgSendConfirmButtons(assistant.userId, msg, chatId, kind);
+}
+
+function weeklyStartNotify() {
+  getAllGroups().forEach(function(g) {
+    var res  = getTasks({ chatId: g.chatId });
+    if (!res.ok) return;
+    var now  = new Date();
+    var wEnd = new Date(); wEnd.setDate(now.getDate() + 7);
+    var upcoming = res.tasks.filter(function(t) {
+      var d = new Date(dateOnly(t.date));
+      return d >= now && d <= wEnd && t.status !== 'done';
+    }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    var msg = 'Задачи на неделю:\n\n';
+    if (!upcoming.length) { msg += 'Задач на неделю нет.'; }
+    upcoming.slice(0, 15).forEach(function(t, i) {
+      var ic = { high: '🔴', medium: '🟡', low: '🟢' }[t.priority] || '•';
+      msg += (i + 1) + '. ' + ic + ' ' + t.title + '\n   ' + t.date + (t.assignee ? ' | ' + t.assignee : '') + '\n';
+    });
+    tgSend(g.chatId, msg);
+  });
+}
+
+function currentHHMM() {
+  return Utilities.formatDate(new Date(), TZ, 'HH:mm');
+}
+
+function isDueReportTime(setting) {
+  if (!setting) return false;
+  var parts = String(setting).split(':');
+  if (parts.length < 2) return false;
+  var now = new Date();
+  var target = new Date(now);
+  target.setHours(Number(parts[0]), Number(parts[1]), 0, 0);
+  var diffMin = Math.floor((now.getTime() - target.getTime()) / 60000);
+  return diffMin >= 0 && diffMin < 5;
+}
+
+function reportSentKey(kind, chatId, suffix) {
+  return 'sent_' + kind + '_' + chatId + '_' + suffix;
+}
+
+function alreadySent(kind, chatId, suffix) {
+  return PropertiesService.getScriptProperties().getProperty(reportSentKey(kind, chatId, suffix)) === '1';
+}
+
+function markSent(kind, chatId, suffix) {
+  PropertiesService.getScriptProperties().setProperty(reportSentKey(kind, chatId, suffix), '1');
+}
+
+function reportSettingsForChat(chatId) {
+  return getReportSettings({ chatId: chatId }).settings;
+}
+
+function morningReportDispatcher() {
+  var now = currentHHMM();
+  getAllGroups().forEach(function(g) {
+    var s = reportSettingsForChat(g.chatId);
+    var key = todayStr();
+    if (!isDueReportTime(s.morning) || alreadySent('morning', g.chatId, key)) return;
+    morningNotifyGroup(g);
+    markSent('morning', g.chatId, key);
+  });
+}
+
+function morningNotifyGroup(g) {
+  var res = getTasks({ chatId: g.chatId });
+  if (!res.ok) return;
+  var today   = res.tasks.filter(function(t) { return dateOnly(t.date) === todayStr() && t.status !== 'cancelled'; });
+  var overdue = res.tasks.filter(function(t) { return dateOnly(t.date) < todayStr() && t.status !== 'done' && t.status !== 'cancelled'; });
+  today.sort(function(a, b) {
+    var pp = { high: 0, medium: 1, low: 2 };
+    return (pp[a.priority] || 1) - (pp[b.priority] || 1);
+  });
+  var msg = 'Доброе утро! Задачи на ' + fmtDate(new Date()) + ':\n\n';
+  if (!today.length) { msg += 'Задач на сегодня нет.\n'; }
+  today.slice(0, 10).forEach(function(t, i) {
+    var ic = { high: '🔴', medium: '🟡', low: '🟢' }[t.priority] || '•';
+    msg += (i + 1) + '. ' + ic + ' ' + t.title + (t.assignee ? ' — ' + t.assignee : '') + '\n';
+  });
+  if (overdue.length) msg += '\nПросроченных задач: ' + overdue.length;
+  tgSend(g.chatId, msg);
+}
+
+function eveningReportDispatcher() {
+  getAllGroups().forEach(function(g) {
+    var s = reportSettingsForChat(g.chatId);
+    var key = todayStr();
+    if (!isDueReportTime(s.evening) || alreadySent('evening', g.chatId, key)) return;
+    var r = buildEveningReportText(g.chatId);
+    if (!r || !r.hasAny) return;
+    if (r.allDone) publishReport(g.chatId, 'evening', r.text);
+    else requestReportConfirmation(g.chatId, 'evening', r.text, g.name);
+    markSent('evening', g.chatId, key);
+  });
+}
+
+function weeklyFridayReportDispatcher() {
+  var nowDate = new Date();
+  if (nowDate.getDay() !== 5) return;
+  getAllGroups().forEach(function(g) {
+    var s = reportSettingsForChat(g.chatId);
+    var key = todayStr();
+    if (!isDueReportTime(s.weekly) || alreadySent('weekly', g.chatId, key)) return;
+    var r = buildWeeklyReportText(g.chatId);
+    if (!r || !r.hasAny) return;
+    if (r.allDone) publishReport(g.chatId, 'weekly', r.text);
+    else requestReportConfirmation(g.chatId, 'weekly', r.text, g.name);
+    markSent('weekly', g.chatId, key);
+  });
+}
+
+function monthlyReportNotify() {
+  getAllGroups().forEach(function(g) {
+    var r = buildPeriodReportText(g.chatId, 'month');
+    if (r && r.hasAny) publishReport(g.chatId, 'monthly', r.text);
+  });
+}
+
+function monthlyReportDispatcher() {
+  var nowDate = new Date();
+  if (nowDate.getDate() !== 1) return;
+  getAllGroups().forEach(function(g) {
+    var s = reportSettingsForChat(g.chatId);
+    var key = Utilities.formatDate(nowDate, TZ, 'yyyy-MM');
+    if (!isDueReportTime(s.monthly) || alreadySent('monthly', g.chatId, key)) return;
+    var r = buildPeriodReportText(g.chatId, 'month');
+    if (r && r.hasAny) publishReport(g.chatId, 'monthly', r.text);
+    markSent('monthly', g.chatId, key);
+  });
+}
+
+function reportDispatcher() {
+  morningReportDispatcher();
+  eveningReportDispatcher();
+  weeklyFridayReportDispatcher();
+  monthlyReportDispatcher();
+}
+
+function pendingTimeoutDispatcher() {
+  getAllGroups().forEach(function(g) {
+    resolveTimedOutPending(g.chatId, 'evening', g.name);
+    resolveTimedOutPending(g.chatId, 'weekly', g.name);
+  });
+}
+
+function archiveSheet(chatId) {
+  return getSheet('Archive_' + chatId, ['archivedAt'].concat(TASK_HDR).concat(['commentsJson']));
+}
+
+function autoArchiveOldTasks() {
+  // Настройки очистки задаются в Script Properties:
+  // ARCHIVE_AFTER_DAYS — сколько дней хранить выполненные/отменённые задачи в активном списке (по умолчанию 45).
+  // MAX_ACTIVE_TASKS — максимальное число активных строк Tasks_<chatId>; лишние старые done/cancelled уходят в архив.
+  var keepDays = Number(PropertiesService.getScriptProperties().getProperty('ARCHIVE_AFTER_DAYS') || 45);
+  var maxActive = Number(PropertiesService.getScriptProperties().getProperty('MAX_ACTIVE_TASKS') || 500);
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - keepDays);
+  getAllGroups().forEach(function(g) {
+    var sh = taskSheet(g.chatId);
+    ensureTaskColumns(sh);
+    var data = sh.getDataRange().getValues();
+    var arch = archiveSheet(g.chatId);
+    var comms = getCommentMap(g.chatId);
+    var activeCount = Math.max(0, data.length - 1);
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (!data[i][0]) continue;
+      var status = String(data[i][7] || '');
+      if (status !== 'done' && status !== 'cancelled') continue;
+      var d = new Date(dateOnly(data[i][5]) || data[i][9]);
+      var overLimit = activeCount > maxActive;
+      if ((isNaN(d) || d > cutoff) && !overLimit) continue;
+      arch.appendRow([nowStr()].concat(data[i].slice(0, TASK_HDR.length)).concat([JSON.stringify(comms[data[i][0]] || [])]));
+      sh.deleteRow(i + 1);
+      activeCount--;
+    }
+  });
+}
+
+function buildExcelAndSend(chatId) {
+  assertBotConfigured();
+  const sh    = taskSheet(chatId);
+  const data  = sh.getDataRange().getValues();
+  const comms = getCommentMap(chatId);
+  const cats  = getCategoriesRaw(chatId);
+  const tmp   = SpreadsheetApp.create('Отчёт_' + chatId + '_' + todayStr());
+  const ts    = tmp.getActiveSheet();
+  ts.setName('Задачи');
+  var hdr = ['ID', 'Задача', 'Описание', 'Текущий исполнитель', 'Все исполнители', 'Дедлайн', 'Приоритет', 'Статус', 'Создал', 'Создано', 'Подзадачи', 'Комментариев'];
+  ts.getRange(1, 1, 1, hdr.length).setValues([hdr]).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('#ffffff');
+  var rows = [];
+  var byAssignee = {};
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    var t    = rowToTask(data[i]);
+    var subs = [];
+    try { subs = JSON.parse(data[i][10] || '[]'); } catch (e) {}
+    var chain = extractAssigneeChain(t);
+    if (!chain.length) chain = ['Не назначен'];
+    chain.forEach(function(a) {
+      if (!byAssignee[a]) { byAssignee[a] = {}; cats.forEach(function(c) { byAssignee[a][c.id] = 0; }); }
+      if (byAssignee[a][t.status] === undefined) byAssignee[a][t.status] = 0;
+      byAssignee[a][t.status]++;
+    });
+    rows.push([
+      t.id, t.title, t.desc, t.assignee, chain.join(' → '), t.date,
+      { high: 'Высокий', medium: 'Средний', low: 'Низкий' }[t.priority] || t.priority,
+      statusLabel(t.status, chatId), t.createdBy, t.createdAt,
+      subs.filter(function(s) { return s.done; }).length + '/' + subs.length,
+      (comms[t.id] || []).length
+    ]);
+  }
+  if (rows.length) ts.getRange(2, 1, rows.length, hdr.length).setValues(rows);
+  ts.autoResizeColumns(1, hdr.length);
+
+  // Вторая вкладка — сводка по сотрудникам (учитывает полную цепочку исполнителей)
+  const ss2 = tmp.insertSheet('Сводка');
+  var shdr = ['Сотрудник'].concat(cats.map(function(c) { return c.label; }));
+  ss2.getRange(1, 1, 1, shdr.length).setValues([shdr]).setFontWeight('bold').setBackground('#4a4a8a').setFontColor('#ffffff');
+  var srows = [];
+  Object.keys(byAssignee).forEach(function(name) {
+    srows.push([name].concat(cats.map(function(c) { return byAssignee[name][c.id] || 0; })));
+  });
+  if (srows.length) ss2.getRange(2, 1, srows.length, shdr.length).setValues(srows);
+  ss2.autoResizeColumns(1, shdr.length);
+
+  var xlsxUrl = 'https://docs.google.com/spreadsheets/d/' + tmp.getId() +
+    '/export?format=xlsx&access_token=' + ScriptApp.getOAuthToken();
+  var blob = UrlFetchApp.fetch(xlsxUrl).getBlob().setName('Отчёт_' + todayStr() + '.xlsx');
+  UrlFetchApp.fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendDocument', {
+    method: 'post',
+    payload: { chat_id: chatId, caption: 'Еженедельный отчёт', document: blob }
+  });
+  DriveApp.getFileById(tmp.getId()).setTrashed(true);
+}
+
+// ================================================================
+// ЗАПУСК — выполните setupAll один раз после обновления кода
+// ================================================================
+function setupAll() {
+  deleteWebhook();
+  setupTriggers();
+  Logger.log('✅ Готово — polling и триггеры настроены');
+}
+
+function setupTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function(t) { ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('pollUpdates').timeBased().everyMinutes(1).create();
+  ScriptApp.newTrigger('reportDispatcher').timeBased().everyMinutes(5).create();
+  ScriptApp.newTrigger('pendingTimeoutDispatcher').timeBased().everyMinutes(30).create();
+  ScriptApp.newTrigger('weeklyStartNotify').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
+  ScriptApp.newTrigger('autoArchiveOldTasks').timeBased().everyDays(1).atHour(3).create();
+  ScriptApp.newTrigger('processExpiredRoleRequests').timeBased().everyDays(1).atHour(6).create();
+}
+
+function testSend() {
+  tgSend('-1004296013043', 'Тест — бот работает!');
+}
+
