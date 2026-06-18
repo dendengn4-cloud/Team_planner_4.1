@@ -73,7 +73,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 /* HEADER */
 .hdr{background:var(--surf);border-bottom:1px solid var(--brd);padding:12px 16px 10px;position:sticky;top:0;z-index:100}
 .hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.hgrouplbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:2px}
+.hgrouplbl{font-size:12px;font-weight:500;color:var(--muted);margin-top:1px}
 .logo{font-size:20px;font-weight:700;letter-spacing:-.4px}.logo span{color:var(--acc)}
 .hdr-r{display:flex;gap:6px;align-items:center}
 .rbadge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;border:none;color:var(--acc);background:var(--acc-s)}
@@ -248,8 +248,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
   <div class="hdr">
     <div class="hdr1">
       <div>
+        <div class="logo">Задачи команды<span>.</span></div>
         <div class="hgrouplbl" id="groupName">—</div>
-        <div class="logo">Команда<span>.</span></div>
       </div>
       <div class="hdr-r">
         <div class="rbadge" id="rBadge">...</div>
@@ -356,7 +356,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
       <div class="fopt" data-fn="rounded" onclick="setFn('rounded')" style="font-family:'Trebuchet MS',sans-serif">Rounded</div>
     </div>
   </div>
+  <div class="ssec" id="roleAccessSec"><div class="sstitle">Доступ</div>
+    <div id="roleAccessContent"></div>
+  </div>
   <button class="btn btn-s" onclick="closeOv('settOv')">Закрыть</button>
+</div>
+</div>
+
+<!-- ROLE REQUESTS (только ассистент) -->
+<div class="ov" id="roleReqOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="mtitle">Запросы на роль ассистента</div>
+  <div class="l-sub" style="text-align:left;margin-bottom:10px">Если запрос не отклонить в течение 7 дней, роль будет назначена автоматически.</div>
+  <div class="alist" id="roleReqList"></div>
+  <button class="btn btn-s" onclick="closeOv('roleReqOv')" style="margin-top:6px">Закрыть</button>
 </div>
 </div>
 
@@ -749,7 +763,51 @@ function openSettUI(){
   document.querySelectorAll('.accdot').forEach(d=>d.classList.toggle('sel',d.dataset.c===acc));
   document.getElementById('fsSlider').value=fontSize;
   document.getElementById('densSlider').value=densityLevel;
+  renderRoleAccessSection();
   openOv('settOv');
+}
+
+async function renderRoleAccessSection(){
+  const el=document.getElementById('roleAccessContent');
+  if(isAssistant(ME.role)){
+    el.innerHTML=`<button class="btn btn-s" onclick="openRoleRequestsUI()" style="max-width:none">📋 Запросы на роль ассистента</button>`;
+  } else {
+    el.innerHTML=`<button class="btn btn-s" onclick="requestMyAssistantRole()" style="max-width:none">🙋 Запросить роль ассистента</button>`;
+  }
+}
+
+async function requestMyAssistantRole(){
+  const r=await api('requestAssistantRole',{});
+  if(r.ok) showToast('Запрос отправлен ассистентам ✓');
+  else showToast(r.error||'Не удалось отправить запрос');
+}
+
+async function openRoleRequestsUI(){
+  const r=await api('getRoleRequests',{});
+  const list=document.getElementById('roleReqList');
+  if(!r.ok){ list.innerHTML='<div style="color:var(--muted);font-size:13px">Ошибка загрузки</div>'; openOv('roleReqOv'); return; }
+  const pending=r.requests.filter(x=>x.status==='pending');
+  if(!pending.length){
+    list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">Нет активных запросов</div>';
+  } else {
+    list.innerHTML=pending.map(req=>`
+      <div class="aitem" style="flex-direction:column;align-items:stretch;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="aname">${esc(req.userName)}</div><div class="arole">До ${esc(req.expiresAt)}</div></div>
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button class="btn btn-d" style="padding:8px" onclick="resolveRoleRequestUI('${req.id}','deny')">Отклонить</button>
+          <button class="btn btn-p" style="padding:8px" onclick="resolveRoleRequestUI('${req.id}','approve')">Одобрить</button>
+        </div>
+      </div>`).join('');
+  }
+  openOv('roleReqOv');
+}
+
+async function resolveRoleRequestUI(id,decision){
+  const r=await api('resolveRoleRequest',{id,decision});
+  if(r.ok){ showToast(decision==='approve'?'Роль назначена ✓':'Запрос отклонён'); openRoleRequestsUI(); }
+  else showToast(r.error||'Ошибка');
 }
 
 // ============================================================
