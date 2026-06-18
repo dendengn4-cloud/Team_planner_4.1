@@ -42,6 +42,9 @@
 }
 [data-theme=uzatlas]{--bg:#071f26;--surf:#0d3036;--surf2:#12454b;--brd:#1f6870;--acc:#f4c430;--acc-s:rgba(244,196,48,.18);--txt:#f5fff9;--muted:#8fc7c2}
 [data-theme=uzsuzani]{--bg:#221018;--surf:#321820;--surf2:#48222d;--brd:#713547;--acc:#22c55e;--acc-s:rgba(34,197,94,.17);--txt:#fff8ed;--muted:#d6a99a}
+[data-theme=uzishkor]{--bg:#0a1628;--surf:#0f2040;--surf2:#152e58;--brd:#1e4080;--acc:#00c9a0;--acc-s:rgba(0,201,160,.18);--txt:#eaf6ff;--muted:#6ab8d4}
+[data-theme=uzgilem]{--bg:#f5f0e8;--surf:#fdfaf4;--surf2:#ede5d5;--brd:#c8b89a;--acc:#2d8c3c;--acc-s:rgba(45,140,60,.14);--txt:#1a1208;--muted:#6b5a3e}
+[data-theme=uzikat]{--bg:#f0ede4;--surf:#faf8f2;--surf2:#e5ded0;--brd:#b89a72;--acc:#1a7abf;--acc-s:rgba(26,122,191,.14);--txt:#1c1408;--muted:#7a6040}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var(--fs);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:0}
@@ -68,6 +71,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 #groupWrap.asOverlay .groupPanel{box-shadow:0 18px 60px rgba(0,0,0,.28)}
 .groupTop{display:flex;align-items:center;justify-content:space-between;gap:10px;width:min(460px,100%)}
 .groupPanel .groupTop{width:100%;margin-bottom:8px}
+.plannerCard{background:var(--surf2);border:1.5px solid var(--acc);border-radius:16px;padding:16px;margin-bottom:14px;cursor:pointer;transition:transform .12s,box-shadow .15s}
+.plannerCard:active{transform:scale(.98)}
+.plannerCard .pc-name{font-size:16px;font-weight:700;margin-bottom:2px}
+.plannerCard .pc-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+.plannerCard .pc-stats{display:flex;gap:7px}
+.plannerCard .pc-stat{flex:1;background:var(--surf);border-radius:10px;padding:7px 4px;text-align:center;border:1px solid var(--brd)}
+.plannerCard .pc-stat .psnum{font-size:15px;font-weight:800;line-height:1;margin-bottom:2px}
+.plannerCard .pc-stat .pslbl{font-size:8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .g-card{width:100%;background:transparent;border:0;border-radius:0;padding:12px;cursor:pointer;transition:background .15s,transform .12s;display:grid;grid-template-columns:1.2fr .8fr auto;align-items:center;gap:10px;box-shadow:none;border-bottom:1px solid var(--brd)}
 .g-card:active{border-color:var(--acc);transform:scale(.98)}
 .g-icon{font-size:24px}.g-name{font-size:15px;font-weight:600}.g-sub{font-size:11px;color:var(--muted)}
@@ -106,11 +117,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .frow::-webkit-scrollbar{display:none}
 .chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;color:var(--muted);background:var(--surf2);transition:all .15s}
 .chip.on{color:#fff;background:var(--acc)}
+.sortRow{display:flex;gap:6px;padding:4px 16px 0;overflow-x:auto;scrollbar-width:none;align-items:center}
+.sortRow::-webkit-scrollbar{display:none}
+.sortChip{padding:4px 10px;border-radius:14px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;color:var(--muted);background:var(--surf2);transition:all .15s}
+.sortChip.on{color:var(--acc);background:var(--surf2);border:1.5px solid var(--acc)}
 
 /* TASKS */
 .twrap{padding:10px 16px 90px}
 .glbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:12px 0 6px 4px}
 .tc{background:var(--surf);border:none;border-radius:16px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tc.due-none{background:rgba(74,222,128,.07);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .tc.due-green{box-shadow:inset 3px 0 0 #34d399,0 1px 3px rgba(0,0,0,.06)}
 .tc.due-blue{box-shadow:inset 3px 0 0 #60a5fa,0 1px 3px rgba(0,0,0,.06)}
 .tc.due-purple{box-shadow:inset 3px 0 0 #a78bfa,0 1px 3px rgba(0,0,0,.06)}
@@ -130,7 +146,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 [data-density=spacious] .sbar2{padding:8px 15px 10px 33px}
 .tdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
 .tb{flex:1;min-width:0}
-.tt{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:4px;word-break:break-word;letter-spacing:-.1px}
+.tt{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:4px;word-break:break-word;letter-spacing:-.1px;display:flex;align-items:center;gap:4px}
 .tmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tass{font-size:11px;color:var(--muted)}.tpr{font-size:10px;font-weight:600;border-radius:6px;padding:2px 6px}
 .ph{background:rgba(248,113,113,.13);color:var(--red)}.pm{background:rgba(251,191,36,.13);color:var(--yellow)}.pl{background:rgba(96,165,250,.1);color:var(--blue)}
@@ -249,6 +265,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .calDay.mark{outline:1px solid var(--acc);background:var(--acc-s)}
 .colorInput{width:34px;height:34px;border:none;background:transparent;padding:0;flex-shrink:0}
 .groupTitleEdit{display:flex;gap:8px;align-items:center}.groupTitleEdit .fi{max-width:none}
+.iconBtn{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:4px 7px;font-size:14px;cursor:pointer;line-height:1;transition:background .15s}
+.iconBtn:active{background:var(--brd)}
 .taskGroupLbl{font-size:10px;color:var(--muted);margin:8px 0 5px 31px;text-transform:uppercase;letter-spacing:.45px}
 .depLine{font-size:11px;color:var(--muted);margin-top:3px}
 .dragHandle{font-size:14px;color:var(--muted);padding:0 2px;cursor:grab}
@@ -316,6 +334,16 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
   <div class="frow" id="frow">
     <button class="chip on" data-f="all">Все</button>
   </div>
+  <div class="sortRow" id="sortRow">
+    <span style="font-size:11px;color:var(--muted);flex-shrink:0">Сорт:</span>
+    <button class="sortChip on" data-s="manual" onclick="setSortMode('manual')">Вручную</button>
+    <button class="sortChip" data-s="deadline_asc" onclick="setSortMode('deadline_asc')">Дедлайн ↑</button>
+    <button class="sortChip" data-s="deadline_desc" onclick="setSortMode('deadline_desc')">Дедлайн ↓</button>
+    <button class="sortChip" data-s="alpha_asc" onclick="setSortMode('alpha_asc')">А–Я</button>
+    <button class="sortChip" data-s="alpha_desc" onclick="setSortMode('alpha_desc')">Я–А</button>
+    <button class="sortChip" data-s="newest" onclick="setSortMode('newest')">Новые</button>
+    <button class="sortChip" data-s="oldest" onclick="setSortMode('oldest')">Старые</button>
+  </div>
   <div class="twrap" id="twrap"><div class="ld"><div class="sp"></div><span>Загружаем...</span></div></div>
 </div>
 
@@ -344,11 +372,28 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
     <select class="fs" id="nAss" style="max-width:100%" onchange="onAssSelectChange('nAss','nAssManual')"><option value="">— не назначен —</option></select>
     <input class="fi" id="nAssManual" placeholder="Ввести вручную..." style="max-width:100%;display:none;margin-top:6px">
   </div>
-  <div class="fg"><label class="fl">Группа задач</label><input class="fi" id="nTaskGroup" placeholder="Например: Запуск / Финансы" style="max-width:100%"></div>
-  <div class="fg"><label class="fl">Группа</label><select class="fs" id="nDepends" style="max-width:100%"><option value="">— без группы —</option></select></div>
+  <div class="fg">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <span class="fl" style="margin:0;flex:1">Группа</span>
+      <button type="button" class="iconBtn" title="Создать новую группу" onclick="openNewGroupModal()">✏️</button>
+      <button type="button" class="iconBtn" title="Управление группами" onclick="openGroupMgmOv()">🗂</button>
+    </div>
+    <select class="fs" id="nTaskGroup" style="max-width:100%"><option value="">— без группы —</option></select>
+  </div>
+  <div class="fg"><label class="fl">Зависимость</label><select class="fs" id="nDepends" style="max-width:100%"><option value="">— нет —</option></select></div>
+  <div class="fg" style="flex-direction:row;align-items:center;gap:10px;padding:6px 0">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex:1">
+      <div class="swtoggle" id="dlToggle" onclick="toggleDeadline(this)" style="width:38px;height:23px;border-radius:12px;background:var(--brd);position:relative;transition:background .2s;flex-shrink:0">
+        <div class="knob" id="dlKnob" style="width:19px;height:19px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div>
+      </div>
+      <span class="fl" style="margin:0">Дедлайн</span>
+    </label>
+  </div>
+  <div id="dlFields" style="display:none">
   <div class="fgrow">
     <div class="fg" style="flex:1"><label class="fl">Дата дедлайна</label><input class="fi" type="date" id="nDL" style="max-width:100%"></div>
     <div class="fg" style="flex:1"><label class="fl">Время</label><input class="fi" type="time" id="nDLTime" style="max-width:100%"></div>
+  </div>
   </div>
   <div class="fg"><label class="fl">Срочность</label><select class="fs" id="nPr" style="max-width:100%"><option value="medium">Средняя</option><option value="high">Высокая ↑</option><option value="low">Низкая ↓</option></select></div>
   <div class="btn-row"><button class="btn btn-s" onclick="closeOv('addOv')">Отмена</button><button class="btn btn-p" id="addBtn" onclick="confirmAdd()">Создать</button></div>
@@ -357,6 +402,53 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 
 <!-- DETAIL -->
 <div class="ov" id="detOv"><div class="modal"><div class="hndl"></div><div id="detCont"></div></div></div>
+
+<!-- NEW GROUP MODAL -->
+<div class="ov" id="newGroupOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="sstitle">Новая группа</div>
+  <div class="fg"><label class="fl">Название группы</label><input class="fi" id="newGroupName" placeholder="Например: Запуск / Финансы" style="max-width:100%"></div>
+  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('newGroupOv')">Отмена</button><button class="btn btn-p" onclick="confirmNewGroup()">Создать</button></div>
+</div>
+</div>
+
+<!-- GROUP MANAGEMENT MODAL -->
+<div class="ov" id="grpMgmOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="sstitle">Управление группами</div>
+  <div id="grpMgmCont"></div>
+  <div class="divhr"></div>
+  <div class="fg"><label class="fl">Объединить группы в одну</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="mergeSelArea">
+      <select class="fs" id="mergeSrc" style="flex:1;min-width:0"><option value="">Из группы...</option></select>
+      <span style="color:var(--muted);font-size:12px">→</span>
+      <select class="fs" id="mergeDst" style="flex:1;min-width:0"><option value="">В группу...</option></select>
+      <button class="btn btn-p" style="flex-shrink:0" onclick="mergeGroups()">Объединить</button>
+    </div>
+  </div>
+  <div class="fg"><label class="fl">Разделить группу</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select class="fs" id="splitSrc" style="flex:1;min-width:0"><option value="">Выберите группу...</option></select>
+      <button class="btn btn-s" style="flex-shrink:0" onclick="openSplitGroup()">Разделить</button>
+    </div>
+  </div>
+  <button class="btn btn-s" onclick="closeOv('grpMgmOv')" style="width:100%;margin-top:4px">Закрыть</button>
+</div>
+</div>
+
+<!-- SPLIT GROUP MODAL -->
+<div class="ov" id="splitOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="sstitle">Разделить группу</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Отметьте задачи, которые перейдут в новую группу. Остальные останутся в исходной.</div>
+  <div class="fg"><label class="fl">Название новой группы</label><input class="fi" id="splitNewName" placeholder="Новая группа..." style="max-width:100%"></div>
+  <div id="splitTaskList" style="max-height:220px;overflow-y:auto;margin-bottom:12px"></div>
+  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('splitOv')">Отмена</button><button class="btn btn-p" onclick="confirmSplit()">Разделить</button></div>
+</div>
+</div>
 
 <!-- SETTINGS -->
 <div class="ov" id="settOv">
@@ -373,6 +465,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
       <div class="thopt" data-th="sand" onclick="setTh('sand')"><div class="thsw" style="background:#f8f1e4;border:1px solid #d8c8a8"></div>Sand</div>
       <div class="thopt" data-th="uzatlas" onclick="setTh('uzatlas')"><div class="thsw" style="background:radial-gradient(circle at 30% 25%,#f4c430 0 18%,transparent 19%),linear-gradient(135deg,#0d9488,#155e75,#f4c430)"></div>Atlas</div>
       <div class="thopt" data-th="uzsuzani" onclick="setTh('uzsuzani')"><div class="thsw" style="background:radial-gradient(circle,#22c55e 0 16%,#f97316 17% 30%,transparent 31%),linear-gradient(135deg,#7f1d1d,#be185d,#facc15)"></div>Suzani</div>
+      <div class="thopt" data-th="uzishkor" onclick="setTh('uzishkor')"><div class="thsw" style="background:repeating-linear-gradient(45deg,#0f2040 0 6px,#00c9a0 6px 8px,#0f2040 8px 14px,#f4c430 14px 16px,#0f2040 16px 22px)"></div>Ишкор 🪆</div>
+      <div class="thopt" data-th="uzgilem" onclick="setTh('uzgilem')"><div class="thsw" style="background:repeating-linear-gradient(90deg,#fdfaf4 0 6px,#2d8c3c 6px 9px,#fdfaf4 9px 15px,#c0392b 15px 18px,#fdfaf4 18px 24px)"></div>Гилам 🟥</div>
+      <div class="thopt" data-th="uzikat" onclick="setTh('uzikat')"><div class="thsw" style="background:repeating-linear-gradient(135deg,#faf8f2 0 7px,#b89a72 7px 10px,#faf8f2 10px 17px,#1a7abf 17px 20px,#faf8f2 20px 27px)"></div>Икат 🪡</div>
     </div>
   </div>
   <div class="ssec"><div class="sstitle">Цвет акцента</div>
@@ -478,6 +573,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 <!-- HIST TASK -->
 <div class="ov" id="histOv"><div class="modal"><div class="hndl"></div><div class="mtitle">История задачи</div><div id="histCont"></div><button class="btn btn-s" onclick="closeOv('histOv')" style="margin-top:8px">Закрыть</button></div></div>
 
+<div class="ov" id="delStaffOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Исключить участника</div><div id="delStaffMsg" style="margin:12px 0;color:var(--fg2);font-size:15px"></div><div class="btn-row"><button class="btn btn-s" onclick="closeOv('delStaffOv')">Отмена</button><button class="btn" id="delStaffConfBtn" style="background:#e53935;color:#fff" onclick="delStaffConfirmed()">Исключить</button></div></div></div>
+
 <div class="ov" id="statsOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Личная статистика</div><div id="statsCont"></div><button class="btn btn-s backBtn" onclick="closeOv('statsOv')" style="margin-top:8px">↩</button></div></div>
 <div class="ov" id="calOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Календарь</div><div id="calCont"></div><div class="fgrow" style="margin-top:12px"><input class="fi" type="date" id="manualCalDate" style="max-width:none"><input class="fi" id="manualCalText" placeholder="Событие" style="max-width:none"></div><button class="btn btn-p" onclick="addManualCalendarDate()" style="max-width:none;margin-top:8px">Добавить дату</button><div class="divhr"></div><div class="fl">День рождения контакта</div><div class="fgrow"><input class="fi" id="bdName" placeholder="Имя" style="max-width:none"><input class="fi" type="date" id="bdDate" style="max-width:none"></div><button class="btn btn-s" onclick="addBirthdayContactUI()" style="max-width:none;margin-top:8px">Добавить день рождения</button><textarea class="fta" id="bdImport" placeholder="Импорт вручную: Имя,YYYY-MM-DD" style="max-width:none;margin-top:8px"></textarea><button class="btn btn-s" onclick="importBirthdayContactsUI()" style="max-width:none;margin-top:8px">Импортировать список</button><div class="tinyHint">Telegram не отдаёт контакты и дни рождения автоматически; добавляйте их вручную или списком.</div><div id="bdList" class="alist" style="margin-top:8px"></div><button class="btn btn-s backBtn" onclick="closeOv('calOv')" style="margin-top:8px">↩</button></div></div>
 
@@ -506,6 +603,7 @@ let curTab = 'today', curDate = new Date();
 let actF = 'all', statFilter = null;
 let selTask = null;
 let fontSize = 15;
+let taskSortMode = 'manual';
 
 const ROLE_DEFAULT_LBL = { director:'👑 Руководитель', assistant:'🛡 Ассистент', manager:'👤 Менеджер' };
 let ROLE_LBL = Object.assign({}, ROLE_DEFAULT_LBL);
@@ -520,6 +618,7 @@ const isAssistant = r => r === 'assistant';
 // ============================================================
 async function init() {
   loadPrefs();
+  initSortRow();
 
   // chat берём из URL (?chat=...) — бот передаёт его в ссылке
   const params  = new URLSearchParams(location.search);
@@ -621,12 +720,34 @@ function renderGroupPicker(groups) {
     return;
   }
   const back = CHAT_ID ? '<div class="modalBackRow"><button class="btn btn-s backBtn" onclick="closeGroupPicker()" title="Назад">← Назад</button></div>' : '';
+  if (groups.length === 1) {
+    list.innerHTML = back + buildPlannerCard(groups[0], tasks);
+    return;
+  }
   list.innerHTML = back + '<div class="serverTable"><div class="serverHead"><span>Название</span><span>Роль</span><span>Участники</span></div>' + groups.map(g=>`
     <div class="g-card" onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
       <div><div class="g-name">👥 ${esc(g.name)}</div><div class="g-sub">${esc(g.chatId)}</div></div>
       <div class="g-sub">${g.role?roleNameRuShort(g.role):'Группа'}</div>
       <div class="g-count">${g.members||g.memberCount||0}</div>
     </div>`).join('') + '</div>';
+}
+
+function buildPlannerCard(g, taskList){
+  // Count tasks by visible categories using current categories array
+  const cats = (typeof categories !== 'undefined' && categories.length) ? categories : [
+    {id:'todo',label:'В очереди',color:'#818cf8'},{id:'in-progress',label:'В работе',color:'#fb923c'},{id:'done',label:'Готово',color:'#2dd4bf'}
+  ];
+  const allTasks = taskList || [];
+  const total = allTasks.length;
+  const statsHtml = cats.slice(0,4).map(c=>{
+    const n = allTasks.filter(t=>t.status===c.id).length;
+    return `<div class="pc-stat"><div class="psnum" style="color:${c.color}">${n}</div><div class="pslbl">${esc(c.label.slice(0,8))}</div></div>`;
+  }).join('');
+  return `<div class="plannerCard" onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
+    <div class="pc-name">📋 ${esc(g.name)}</div>
+    <div class="pc-sub">${total} задач · ${g.role?roleNameRuShort(g.role):'участник'} · ${g.members||g.memberCount||0} чел.</div>
+    <div class="pc-stats">${statsHtml}</div>
+  </div>`;
 }
 
 function roleNameRuShort(role){
@@ -666,6 +787,11 @@ function renderGroupPickerOverlay(groups) {
     return;
   }
   const back = '<div class="modalBackRow"><button class="btn btn-s backBtn" onclick="closeGroupPicker()" title="Назад">← Назад</button></div>';
+  if (groups.length === 1) {
+    const g = groups[0];
+    list.innerHTML = back + buildPlannerCard(g, tasks);
+    return;
+  }
   list.innerHTML = back + '<div class="serverTable"><div class="serverHead"><span>Название</span><span>Роль</span><span>Участники</span></div>' + groups.map(g=>`
     <div class="g-card" onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
       <div><div class="g-name">👥 ${esc(g.name)}</div><div class="g-sub">${esc(g.chatId)}</div></div>
@@ -817,7 +943,7 @@ async function addCategoryUI(){
 }
 
 function randCatColor(){
-  const palette=['#60a5fa','#fbbf24','#34d399','#f87171','#a78bfa','#fb923c','#22d3ee','#f472b6'];
+  const palette=['#818cf8','#fb923c','#2dd4bf','#e879f9','#facc15','#38bdf8','#4ade80','#f472b6'];
   return palette[Math.floor(Math.random()*palette.length)];
 }
 
@@ -1113,10 +1239,22 @@ function buildChips(){
 // ============================================================
 // RENDER ALL
 // ============================================================
+function setSortMode(mode){
+  taskSortMode=mode;
+  try{localStorage.setItem('tp2_taskSortMode',JSON.stringify(mode));}catch(e){}
+  document.querySelectorAll('.sortChip').forEach(c=>c.classList.toggle('on',c.dataset.s===mode));
+  // Drag-drop перемещение работает только в ручном режиме
+  renderTasks();
+}
+function initSortRow(){
+  try{ const s=JSON.parse(localStorage.getItem('tp2_taskSortMode')||'"manual"'); taskSortMode=s||'manual'; }catch(e){}
+  document.querySelectorAll('.sortChip').forEach(c=>c.classList.toggle('on',c.dataset.s===taskSortMode));
+}
 function renderAll(){ buildChips(); renderTasks(); updStats(); }
 
 function dateOnly(s){ return s ? String(s).substring(0,10) : ''; }
-function catById(id){ return categories.find(c=>c.id===id) || {id, label:id, color:'#9aa0a6', icon:'⚪', order:99, visible:true}; }
+const CAT_FALLBACK_LABELS = {'todo':'В очереди','in-progress':'В работе','done':'Готово','cancelled':'Отменено','blocked':'Остановлено'};
+function catById(id){ return categories.find(c=>c.id===id) || {id, label:CAT_FALLBACK_LABELS[id]||id, color:'#9aa0a6', icon:'⚪', order:99, visible:true}; }
 function catColor(id){ return catById(id).color; }
 function catLabel(id){ return catById(id).label; }
 function catIcon(id){ return catById(id).icon; }
@@ -1128,9 +1266,9 @@ function fmtTaskDate(s){
   return d+'.'+m+'.'+y+(tpart?(' в '+tpart):'');
 }
 function dueInfo(task){
-  if(!task.date) return {rank:9, cls:'', text:''};
+  if(!task.date) return {rank:9, cls:'due-none', text:''};
   const dt=new Date(String(task.date).replace(' ','T'));
-  if(isNaN(dt)) return {rank:9, cls:'', text:''};
+  if(isNaN(dt)) return {rank:9, cls:'due-none', text:''};
   const mins=Math.floor((dt-new Date())/6e4);
   const h=mins/60;
   const abs=Math.max(0,mins);
@@ -1183,7 +1321,23 @@ function renderTasks(){
   const wrap=document.getElementById('twrap');
   const f=getFiltered(); updStats();
   if(!f.length){ wrap.innerHTML='<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
-  f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; const da=dueInfo(a), db=dueInfo(b); if(da.rank!==db.rank)return da.rank-db.rank; const pp={high:0,medium:1,low:2}; const pd=(pp[a.priority]??1)-(pp[b.priority]??1); if(pd!==0)return pd; const ca=String(a.createdAt||''), cb=String(b.createdAt||''); return cb.localeCompare(ca); });
+  // Sort by selected mode
+  const mode=taskSortMode||'manual';
+  if(mode==='manual'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return (Number(a.sortOrder)||0)-(Number(b.sortOrder)||0); });
+  } else if(mode==='deadline_asc'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; const da=a.date||'9999', db=b.date||'9999'; return da.localeCompare(db); });
+  } else if(mode==='deadline_desc'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; const da=a.date||'0000', db=b.date||'0000'; return db.localeCompare(da); });
+  } else if(mode==='alpha_asc'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return (a.title||'').localeCompare(b.title||'','ru'); });
+  } else if(mode==='alpha_desc'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return (b.title||'').localeCompare(a.title||'','ru'); });
+  } else if(mode==='newest'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return String(b.createdAt||'').localeCompare(String(a.createdAt||'')); });
+  } else if(mode==='oldest'){
+    f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); });
+  }
   const pc={high:'ph',medium:'pm',low:'pl'};
   const pt={high:'↑ 5',medium:'→ 3',low:'↓ 1'};
   let html='', lastSt=null;
@@ -1199,7 +1353,10 @@ function renderTasks(){
         <div class="dragHandle" onclick="event.stopPropagation()">☰${canEdit(ME.role)?`<div style="display:flex;gap:2px;margin-top:4px"><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',-1)">↑</button><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',1)">↓</button></div>`:''}</div>
         <div class="tdot" style="background:${cat.color}"></div>
         <div class="tb">
-          <div class="tt">${esc(task.title)}</div>
+          <div class="tt">
+            ${subs.length?`<button class="subToggle ${open?'open':''}" onclick="event.stopPropagation();toggleSubs('${task.id}')">›</button>`:'<span style="display:inline-block;width:26px"></span>'}
+            ${esc(task.title)}
+          </div>
           <div class="tmeta">
             ${task.assignee?`<span class="tass">👤 ${esc(task.assignee)}</span>`:''}
             <span class="tpr ${pc[task.priority]||'pm'}">${pt[task.priority]||''}</span>
@@ -1211,9 +1368,7 @@ function renderTasks(){
           ${dep?`<div class="depLine">Группа: ${esc(dep.title)}</div>`:''}
         </div>
         <div class="ttools" onclick="event.stopPropagation()">
-          ${subs.length?`<button class="subToggle ${open?'open':''}" onclick="toggleSubs('${task.id}')">›</button>`:''}
           <select class="statusSel" onchange="chStatus('${task.id}',this.value)">${visibleCats().map(c=>`<option value="${c.id}" ${task.status===c.id?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
-          <div class="tpill" style="background:${cat.color}1f;color:${cat.color}">${cat.label}</div>
           ${due.text?`<div class="dueBadge">${due.text}</div>`:''}
         </div>
       </div>
@@ -1267,7 +1422,8 @@ async function reorderTask(srcId,targetId){
   src.taskGroup=target.taskGroup||'';
   src.sortOrder=(Number(target.sortOrder)||Date.now())-.5;
   tasks.sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0)).forEach((t,i)=>t.sortOrder=i+1);
-  renderTasks();
+  if(taskSortMode!=='manual') setSortMode('manual');
+  else renderTasks();
   await api('reorderTasks',{orders:tasks.map(t=>({id:t.id,sortOrder:t.sortOrder,status:t.status,taskGroup:t.taskGroup||''}))});
 }
 
@@ -1570,7 +1726,127 @@ function fillAssigneeSelect(){
   const sel=document.getElementById('nAss');
   sel.innerHTML='<option value="">— не назначен —</option>'+staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('')+'<option value="__manual__">✏️ Ввести вручную...</option>';
   const dep=document.getElementById('nDepends');
-  if(dep) dep.innerHTML='<option value="">— без группы —</option>'+tasks.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+  if(dep) dep.innerHTML='<option value="">— нет —</option>'+tasks.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+  fillGroupSelect();
+}
+
+// ---- GROUP MANAGEMENT ----
+function getTaskGroups(){
+  const seen=new Set();
+  tasks.forEach(t=>{ if(t.taskGroup) seen.add(t.taskGroup); });
+  return [...seen].sort();
+}
+
+function fillGroupSelect(selId='nTaskGroup', selectedVal=''){
+  const sel=document.getElementById(selId);
+  if(!sel) return;
+  const groups=getTaskGroups();
+  sel.innerHTML='<option value="">— без группы —</option>'+groups.map(g=>`<option value="${esc(g)}" ${g===selectedVal?'selected':''}>${esc(g)}</option>`).join('');
+}
+
+function openNewGroupModal(){
+  document.getElementById('newGroupName').value='';
+  closeOv('grpMgmOv');
+  openOv('newGroupOv');
+  setTimeout(()=>document.getElementById('newGroupName').focus(),200);
+}
+
+function confirmNewGroup(){
+  const name=document.getElementById('newGroupName').value.trim();
+  if(!name){showToast('Введите название');return;}
+  // add to select
+  const sel=document.getElementById('nTaskGroup');
+  if(sel){
+    // avoid duplicates
+    if(![...sel.options].some(o=>o.value===name)){
+      const opt=document.createElement('option');
+      opt.value=name; opt.textContent=name;
+      sel.appendChild(opt);
+    }
+    sel.value=name;
+  }
+  closeOv('newGroupOv');
+  showToast('Группа создана: '+name);
+}
+
+function openGroupMgmOv(){
+  const groups=getTaskGroups();
+  const cont=document.getElementById('grpMgmCont');
+  if(!groups.length){ cont.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0">Нет созданных групп</div>'; }
+  else {
+    cont.innerHTML='<div class="fl" style="margin-bottom:8px">Все группы</div>'+groups.map(g=>{
+      const cnt=tasks.filter(t=>t.taskGroup===g).length;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--surf2);border-radius:10px">
+        <span style="flex:1;font-size:13px;font-weight:600">${esc(g)}</span>
+        <span style="font-size:11px;color:var(--muted)">${cnt} задач</span>
+        <button class="iconBtn" onclick="deleteGroup('${esc(g)}')" title="Удалить группу">🗑</button>
+      </div>`;
+    }).join('');
+  }
+  // fill merge/split selects
+  ['mergeSrc','mergeDst','splitSrc'].forEach(id=>{
+    const s=document.getElementById(id);
+    if(s) s.innerHTML='<option value="">Выберите...</option>'+groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  });
+  openOv('grpMgmOv');
+}
+
+async function deleteGroup(name){
+  if(!confirm('Удалить группу "'+name+'"? Задачи останутся, но потеряют группу.')) return;
+  const toUpdate=tasks.filter(t=>t.taskGroup===name);
+  for(const t of toUpdate){
+    await api('updateTask',{id:t.id,taskGroup:''});
+    t.taskGroup='';
+  }
+  renderAll();
+  openGroupMgmOv(); // refresh
+  showToast('Группа удалена');
+}
+
+async function mergeGroups(){
+  const src=document.getElementById('mergeSrc').value;
+  const dst=document.getElementById('mergeDst').value;
+  if(!src||!dst){showToast('Выберите обе группы');return;}
+  if(src===dst){showToast('Группы должны быть разными');return;}
+  const toUpdate=tasks.filter(t=>t.taskGroup===src);
+  for(const t of toUpdate){
+    await api('updateTask',{id:t.id,taskGroup:dst});
+    t.taskGroup=dst;
+  }
+  renderAll();
+  openGroupMgmOv();
+  showToast(`"${src}" объединена в "${dst}"`);
+}
+
+function openSplitGroup(){
+  const src=document.getElementById('splitSrc').value;
+  if(!src){showToast('Выберите группу');return;}
+  const grpTasks=tasks.filter(t=>t.taskGroup===src);
+  if(grpTasks.length<2){showToast('В группе менее 2 задач');return;}
+  document.getElementById('splitNewName').value='';
+  document.getElementById('splitTaskList').innerHTML=grpTasks.map(t=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px">
+      <input type="checkbox" data-tid="${esc(t.id)}" style="accent-color:var(--acc)">
+      <span>${esc(t.title)}</span>
+    </label>`).join('');
+  closeOv('grpMgmOv');
+  openOv('splitOv');
+}
+
+async function confirmSplit(){
+  const newName=document.getElementById('splitNewName').value.trim();
+  if(!newName){showToast('Введите название новой группы');return;}
+  const checked=[...document.querySelectorAll('#splitTaskList input[type=checkbox]:checked')];
+  if(!checked.length){showToast('Отметьте хотя бы одну задачу');return;}
+  for(const cb of checked){
+    const tid=cb.dataset.tid;
+    const t=tasks.find(x=>x.id===tid); if(!t) continue;
+    await api('updateTask',{id:tid,taskGroup:newName});
+    t.taskGroup=newName;
+  }
+  renderAll();
+  closeOv('splitOv');
+  showToast(`Создана группа "${newName}"`);
 }
 
 function onAssSelectChange(selId, inputId){
@@ -1596,16 +1872,35 @@ function getAssigneeValue(selId, inputId){
   return sel.value;
 }
 
+function setDeadlineToggle(on){
+  const tog=document.getElementById('dlToggle');
+  const knob=document.getElementById('dlKnob');
+  const fields=document.getElementById('dlFields');
+  if(!tog) return;
+  tog.classList.toggle('active',!!on);
+  tog.style.background=on?'var(--acc)':'var(--brd)';
+  if(knob) knob.style.left=on?'17px':'2px';
+  if(fields) fields.style.display=on?'':'none';
+  if(on && !document.getElementById('nDL').value){
+    document.getElementById('nDL').value=curDate.toISOString().split('T')[0];
+  }
+}
+function toggleDeadline(el){
+  setDeadlineToggle(!el.classList.contains('active'));
+}
+
 function openAdd(){
   if(!canCreate(ME.role)){showToast('Нет прав');return;}
   document.getElementById('nTitle').value='';
   document.getElementById('nSub').value='';
   document.getElementById('nComment').value='';
   document.getElementById('nTaskGroup').value='';
-  document.getElementById('nDL').value=curDate.toISOString().split('T')[0];
+  document.getElementById('nDL').value='';
   document.getElementById('nDLTime').value='';
   document.getElementById('nPr').value='medium';
   document.getElementById('nUseSubs').checked=false;
+  // reset deadline toggle
+  setDeadlineToggle(false);
   toggleSubEditor(false);
   fillAssigneeSelect();
   openOv('addOv');
@@ -1652,9 +1947,10 @@ async function confirmAdd(){
   const ass=getAssigneeValue('nAss','nAssManual');
   const taskGroup=document.getElementById('nTaskGroup')?.value.trim()||'';
   const dependsOn=document.getElementById('nDepends')?.value||'';
-  const dl=document.getElementById('nDL').value;
-  const dlTime=document.getElementById('nDLTime').value;
-  const fullDate=dl+(dlTime?(' '+dlTime):'');
+  const dlEnabled=document.getElementById('dlToggle')?.classList.contains('active');
+  const dl=dlEnabled?document.getElementById('nDL').value:'';
+  const dlTime=dlEnabled?document.getElementById('nDLTime').value:'';
+  const fullDate=dl?(dl+(dlTime?(' '+dlTime):'')):'';
   const pr=document.getElementById('nPr').value;
   const btn=document.getElementById('addBtn'); btn.disabled=true; btn.textContent='Создаём...';
   const subtasks=collectSubtasks();
@@ -1719,12 +2015,22 @@ function holdDelSt(id){
 function cancelHoldDelSt(){
   if(staffDelHold){ clearTimeout(staffDelHold); staffDelHold=null; }
 }
-async function delSt(id){
+let _delStaffId=null;
+function delSt(id){
   cancelHoldDelSt();
   const s=staff.find(x=>x.id===id);
   const name=s?.name||'участника';
-  if(!confirm(`Вы точно хотите исключить ${name} из TeamPlanner?`)) return;
-  await api('delStaff',{id}); staff=staff.filter(s=>s.id!==id); renderStaff(); buildChips();
+  _delStaffId=id;
+  document.getElementById('delStaffMsg').textContent=`Вы точно хотите исключить «${name}» из TeamPlanner? Участник получит уведомление в личные сообщения бота.`;
+  openOv('delStaffOv');
+}
+async function delStaffConfirmed(){
+  if(!_delStaffId) return;
+  const id=_delStaffId; _delStaffId=null;
+  closeOv('delStaffOv');
+  const r=await api('delStaff',{id,notify:true});
+  if(r.ok){ staff=staff.filter(s=>s.id!==id); renderStaff(); buildChips(); showToast('Участник исключён'); }
+  else showToast(r.error||'Не удалось исключить');
 }
 
 // ============================================================
