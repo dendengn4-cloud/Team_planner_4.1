@@ -107,10 +107,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 
 /* STATS */
 .sbar{display:flex;gap:6px;padding:10px 16px 0}
-.stat{flex:1;background:var(--surf);border:1px solid var(--brd);border-radius:13px;padding:8px 5px;text-align:center;cursor:pointer;transition:transform .12s,border-color .2s;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.stat{flex:1;background:var(--surf);border:1.5px solid var(--brd);border-radius:14px;padding:10px 5px 8px;text-align:center;cursor:pointer;transition:transform .12s,border-color .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.07);user-select:none;-webkit-user-select:none;position:relative}
 .stat.af,.stat:active{border-color:var(--acc);background:var(--acc-s);transform:scale(.97)}
-.snum{font-size:17px;font-weight:800;line-height:1;margin-bottom:2px}
-.slbl{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.stat.holding{transform:scale(.93);border-color:var(--acc)}
+.snum{font-size:20px;font-weight:800;line-height:1;margin-bottom:3px}
+.slbl{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sbar-period{display:flex;align-items:center;justify-content:flex-end;padding:4px 16px 0;gap:4px;font-size:10px;color:var(--muted);font-weight:600}
+.sbar-period-btn{background:none;border:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer;padding:0 2px}
 
 /* FILTERS */
 .frow{display:flex;gap:6px;padding:8px 16px 0;overflow-x:auto;scrollbar-width:none}
@@ -154,6 +157,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .tpill{font-size:10px;font-weight:600;border-radius:8px;padding:3px 9px;white-space:nowrap;flex-shrink:0;margin-top:1px}
 .ttools{display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0}
 .statusSel{max-width:124px;background:var(--surf2);border:1px solid var(--brd);border-radius:9px;color:var(--txt);font-size:10px;padding:4px 6px}
+.stBtn{display:flex;align-items:center;gap:4px;border:none;border-radius:10px;padding:5px 8px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity .15s;position:relative}
+.stBtn .stArrow{font-size:8px;opacity:.7}
+.stDrop{position:fixed;z-index:9999;background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.45);min-width:140px}
+.stDrop .stOpt{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.stDrop .stOpt:hover{background:var(--surf2)}
+.stDrop .stOpt.active{background:var(--acc-s)}
+@keyframes blink-emerald{0%,100%{opacity:1}50%{opacity:.4}}
+.status-inprogress{animation:blink-emerald 1.4s ease-in-out infinite}
 .dueBadge{font-size:10px;font-weight:700;border-radius:8px;padding:3px 7px;background:rgba(248,113,113,.13);color:var(--red);white-space:nowrap}
 .subToggle{width:26px;height:26px;border:none;border-radius:8px;background:var(--surf2);color:var(--txt);cursor:pointer;transition:transform .2s,background .15s;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1}
 .subToggle.open{transform:rotate(90deg);background:var(--acc-s);color:var(--acc)}
@@ -331,11 +342,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
     <button class="tdBtn" onclick="openCalendar()">Сегодня</button>
   </div>
   <div class="sbar" id="sbar"></div>
+  <div class="sbar-period" id="sbarPeriodRow" style="display:none">
+    <span id="sbarPeriodLbl">За сегодня</span>
+    <button class="sbar-period-btn" onclick="openStatPeriodPicker()" title="Изменить период">⏱</button>
+  </div>
   <div class="frow" id="frow">
     <button class="chip on" data-f="all">Все</button>
   </div>
-  <div class="sortRow" id="sortRow">
-    <span style="font-size:11px;color:var(--muted);flex-shrink:0">Сорт:</span>
+  <div class="sortRow" id="sortRowHeader" style="padding:4px 16px 0">
+    <button class="sortChip on" id="sortToggleBtn" onclick="toggleSortPanel()" style="display:flex;align-items:center;gap:4px">Сорт <span id="sortArrow" style="font-size:9px">▼</span></button>
+    <span id="sortCurLabel" style="font-size:11px;color:var(--acc);font-weight:600"></span>
+  </div>
+  <div class="sortRow" id="sortRow" style="display:none">
     <button class="sortChip on" data-s="manual" onclick="setSortMode('manual')">Вручную</button>
     <button class="sortChip" data-s="deadline_asc" onclick="setSortMode('deadline_asc')">Дедлайн ↑</button>
     <button class="sortChip" data-s="deadline_desc" onclick="setSortMode('deadline_desc')">Дедлайн ↓</button>
@@ -378,9 +396,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
       <button type="button" class="iconBtn" title="Создать новую группу" onclick="openNewGroupModal()">✏️</button>
       <button type="button" class="iconBtn" title="Управление группами" onclick="openGroupMgmOv()">🗂</button>
     </div>
-    <select class="fs" id="nTaskGroup" style="max-width:100%"><option value="">— без группы —</option></select>
+    <select class="fs" id="nTaskGroup" style="max-width:100%" onchange="onTaskGroupChange(this)"><option value="">— без группы —</option></select>
+    <div id="nTaskGroupNewWrap" style="display:none;margin-top:6px">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="fi" id="nTaskGroupNew" placeholder="Название новой группы..." style="flex:1;margin:0" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmInlineGroup();}">
+        <button type="button" class="btn btn-p" style="padding:8px 12px;max-width:90px" onclick="confirmInlineGroup()">Создать</button>
+        <button type="button" class="iconBtn" onclick="cancelInlineGroup()">✕</button>
+      </div>
+    </div>
   </div>
-  <div class="fg"><label class="fl">Зависимость</label><select class="fs" id="nDepends" style="max-width:100%"><option value="">— нет —</option></select></div>
+  <div class="fg"><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="nUseDepends" onchange="toggleDependsField(this.checked)"> Подзадача (зависит от другой задачи)</label>
+    <div id="dependsField" style="display:none;margin-top:8px"><select class="fs" id="nDepends" style="max-width:100%"><option value="">— выберите родительскую задачу —</option></select></div>
+  </div>
   <div class="fg" style="flex-direction:row;align-items:center;gap:10px;padding:6px 0">
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex:1">
       <div class="swtoggle" id="dlToggle" onclick="toggleDeadline(this)" style="width:38px;height:23px;border-radius:12px;background:var(--brd);position:relative;transition:background .2s;flex-shrink:0">
@@ -575,6 +602,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 
 <div class="ov" id="delStaffOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Исключить участника</div><div id="delStaffMsg" style="margin:12px 0;color:var(--fg2);font-size:15px"></div><div class="btn-row"><button class="btn btn-s" onclick="closeOv('delStaffOv')">Отмена</button><button class="btn" id="delStaffConfBtn" style="background:#e53935;color:#fff" onclick="delStaffConfirmed()">Исключить</button></div></div></div>
 
+<div class="ov" id="statPeriodOv"><div class="modal"><div class="hndl"></div><div class="mtitle" id="statPeriodTitle">Период статистики</div><div class="sgrid" id="statPeriodGrid" style="margin-top:8px"></div><button class="btn btn-s" onclick="closeOv('statPeriodOv')" style="margin-top:12px;width:100%">Отмена</button></div></div>
 <div class="ov" id="statsOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Личная статистика</div><div id="statsCont"></div><button class="btn btn-s backBtn" onclick="closeOv('statsOv')" style="margin-top:8px">↩</button></div></div>
 <div class="ov" id="calOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Календарь</div><div id="calCont"></div><div class="fgrow" style="margin-top:12px"><input class="fi" type="date" id="manualCalDate" style="max-width:none"><input class="fi" id="manualCalText" placeholder="Событие" style="max-width:none"></div><button class="btn btn-p" onclick="addManualCalendarDate()" style="max-width:none;margin-top:8px">Добавить дату</button><div class="divhr"></div><div class="fl">День рождения контакта</div><div class="fgrow"><input class="fi" id="bdName" placeholder="Имя" style="max-width:none"><input class="fi" type="date" id="bdDate" style="max-width:none"></div><button class="btn btn-s" onclick="addBirthdayContactUI()" style="max-width:none;margin-top:8px">Добавить день рождения</button><textarea class="fta" id="bdImport" placeholder="Импорт вручную: Имя,YYYY-MM-DD" style="max-width:none;margin-top:8px"></textarea><button class="btn btn-s" onclick="importBirthdayContactsUI()" style="max-width:none;margin-top:8px">Импортировать список</button><div class="tinyHint">Telegram не отдаёт контакты и дни рождения автоматически; добавляйте их вручную или списком.</div><div id="bdList" class="alist" style="margin-top:8px"></div><button class="btn btn-s backBtn" onclick="closeOv('calOv')" style="margin-top:8px">↩</button></div></div>
 
@@ -604,6 +632,10 @@ let actF = 'all', statFilter = null;
 let selTask = null;
 let fontSize = 15;
 let taskSortMode = 'manual';
+let collapsedGroups = new Set();
+// Период статистики для вкладок (today всегда = день, остальные настраиваемые)
+const tabStatPeriod = { today: 'day', all: 'week', my: 'week' };
+const PERIOD_LABELS = { day:'За сегодня', week:'За неделю', month:'За месяц', all:'За всё время' };
 
 const ROLE_DEFAULT_LBL = { director:'👑 Руководитель', assistant:'🛡 Ассистент', manager:'👤 Менеджер' };
 let ROLE_LBL = Object.assign({}, ROLE_DEFAULT_LBL);
@@ -739,12 +771,13 @@ function buildPlannerCard(g, taskList){
   ];
   const allTasks = taskList || [];
   const total = allTasks.length;
+  const isCurrent = String(g.chatId) === String(CHAT_ID);
   const statsHtml = cats.slice(0,4).map(c=>{
     const n = allTasks.filter(t=>t.status===c.id).length;
     return `<div class="pc-stat"><div class="psnum" style="color:${c.color}">${n}</div><div class="pslbl">${esc(c.label.slice(0,8))}</div></div>`;
   }).join('');
-  return `<div class="plannerCard" onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
-    <div class="pc-name">📋 ${esc(g.name)}</div>
+  return `<div class="plannerCard"${isCurrent?' style="border-color:#2dd4bf;box-shadow:0 0 0 2px rgba(45,212,191,.25)"':''} onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
+    <div class="pc-name">📋 ${esc(g.name)}${isCurrent?' <span style="font-size:10px;font-weight:700;color:#2dd4bf;border:1px solid #2dd4bf;border-radius:8px;padding:1px 6px;vertical-align:middle">ТЕКУЩАЯ</span>':''}</div>
     <div class="pc-sub">${total} задач · ${g.role?roleNameRuShort(g.role):'участник'} · ${g.members||g.memberCount||0} чел.</div>
     <div class="pc-stats">${statsHtml}</div>
   </div>`;
@@ -787,17 +820,8 @@ function renderGroupPickerOverlay(groups) {
     return;
   }
   const back = '<div class="modalBackRow"><button class="btn btn-s backBtn" onclick="closeGroupPicker()" title="Назад">← Назад</button></div>';
-  if (groups.length === 1) {
-    const g = groups[0];
-    list.innerHTML = back + buildPlannerCard(g, tasks);
-    return;
-  }
-  list.innerHTML = back + '<div class="serverTable"><div class="serverHead"><span>Название</span><span>Роль</span><span>Участники</span></div>' + groups.map(g=>`
-    <div class="g-card" onclick="selectGroup('${jsArg(g.chatId)}','${jsArg(g.name)}')">
-      <div><div class="g-name">👥 ${esc(g.name)}</div><div class="g-sub">${esc(g.chatId)}</div></div>
-      <div class="g-sub">${g.role?roleNameRuShort(g.role):'Группа'}</div>
-      <div class="g-count">${g.members||g.memberCount||0}</div>
-    </div>`).join('') + '</div>';
+  // Текущая группа показывается со своим реальным списком задач (уже загружен), остальные — со своими счётчиками 0 до перехода в них
+  list.innerHTML = back + groups.map(g => buildPlannerCard(g, String(g.chatId)===String(CHAT_ID) ? tasks : (g.tasks || []))).join('');
 }
 
 function groupWrapOverlayClick(e) {
@@ -1239,16 +1263,42 @@ function buildChips(){
 // ============================================================
 // RENDER ALL
 // ============================================================
+const SORT_LABELS={'manual':'Вручную','deadline_asc':'Дедлайн ↑','deadline_desc':'Дедлайн ↓','alpha_asc':'А–Я','alpha_desc':'Я–А','newest':'Новые','oldest':'Старые'};
+let _sortPanelOpen=false;
+function toggleSortPanel(){
+  _sortPanelOpen=!_sortPanelOpen;
+  const row=document.getElementById('sortRow');
+  const arrow=document.getElementById('sortArrow');
+  if(row) row.style.display=_sortPanelOpen?'flex':'none';
+  if(arrow) arrow.textContent=_sortPanelOpen?'▲':'▼';
+}
+function updateSortLabel(){
+  const el=document.getElementById('sortCurLabel');
+  if(el) el.textContent=taskSortMode!=='manual'?(SORT_LABELS[taskSortMode]||''):'';
+}
 function setSortMode(mode){
   taskSortMode=mode;
   try{localStorage.setItem('tp2_taskSortMode',JSON.stringify(mode));}catch(e){}
   document.querySelectorAll('.sortChip').forEach(c=>c.classList.toggle('on',c.dataset.s===mode));
-  // Drag-drop перемещение работает только в ручном режиме
+  updateSortLabel();
+  // Закрываем панель после выбора
+  _sortPanelOpen=false;
+  const row=document.getElementById('sortRow');
+  const arrow=document.getElementById('sortArrow');
+  if(row) row.style.display='none';
+  if(arrow) arrow.textContent='▼';
   renderTasks();
 }
 function initSortRow(){
   try{ const s=JSON.parse(localStorage.getItem('tp2_taskSortMode')||'"manual"'); taskSortMode=s||'manual'; }catch(e){}
+  try{ collapsedGroups=new Set(JSON.parse(localStorage.getItem('tp2_collapsedGroups')||'[]')); }catch(e){}
   document.querySelectorAll('.sortChip').forEach(c=>c.classList.toggle('on',c.dataset.s===taskSortMode));
+  updateSortLabel();
+}
+function toggleGroupCollapse(name){
+  if(collapsedGroups.has(name)) collapsedGroups.delete(name); else collapsedGroups.add(name);
+  try{localStorage.setItem('tp2_collapsedGroups',JSON.stringify([...collapsedGroups]));}catch(e){}
+  renderTasks();
 }
 function renderAll(){ buildChips(); renderTasks(); updStats(); }
 
@@ -1286,8 +1336,8 @@ function getFiltered(){
   let f=[...tasks];
   if(curTab==='today') f=f.filter(t=>{
     if(t.status==='done') return dateOnly(t.date)===ds;
-    if(!t.date) return dateOnly(t.createdAt)===ds;
-    return dateOnly(t.date)>=ds || dateOnly(t.date)===ds;
+    if(!t.date) return true;
+    return dateOnly(t.date)>=ds;
   });
   if(curTab==='my') f=f.filter(t=>t.assignee&&t.assignee.toLowerCase()===ME.name.toLowerCase());
   if(statFilter) f=f.filter(t=>t.status===statFilter);
@@ -1298,28 +1348,107 @@ function getFiltered(){
   return f;
 }
 
-function updStats(){
-  const bar=document.getElementById('sbar');
-  // Считаем по задачам текущей вкладки (без statFilter), чтобы плашки отражали "сегодня"/"мои"
+// Фильтрует задачи по периоду для статбара (не зависит от statFilter)
+function getStatBase(){
   const ds=curDate.toISOString().split('T')[0];
   let base=[...tasks];
-  if(curTab==='today') base=base.filter(t=>{
-    if(t.status==='done') return dateOnly(t.date)===ds;
-    if(!t.date) return dateOnly(t.createdAt)===ds;
-    return dateOnly(t.date)>=ds || dateOnly(t.date)===ds;
-  });
+
+  // Фильтр по вкладке
+  if(curTab==='today'){
+    base=base.filter(t=>{
+      if(t.status==='done') return dateOnly(t.date)===ds;
+      if(!t.date) return true;
+      return dateOnly(t.date)>=ds;
+    });
+    return base; // today всегда = текущий день, период не применяем
+  }
   if(curTab==='my') base=base.filter(t=>t.assignee&&t.assignee.toLowerCase()===ME.name.toLowerCase());
+
+  // Фильтр по периоду (для 'all' и 'my')
+  const period=tabStatPeriod[curTab]||'all';
+  if(period!=='all'){
+    const now=new Date();
+    let from=new Date(now);
+    if(period==='day'){ from.setHours(0,0,0,0); }
+    else if(period==='week'){ from.setDate(now.getDate()-6); from.setHours(0,0,0,0); }
+    else if(period==='month'){ from.setDate(now.getDate()-29); from.setHours(0,0,0,0); }
+    const fromStr=from.toISOString().split('T')[0];
+    base=base.filter(t=>{
+      const d=dateOnly(t.date||t.createdAt||'');
+      return d>=fromStr;
+    });
+  }
+  return base;
+}
+
+function updStats(){
+  const bar=document.getElementById('sbar');
+  const periodRow=document.getElementById('sbarPeriodRow');
+  const periodLbl=document.getElementById('sbarPeriodLbl');
+  const base=getStatBase();
+
+  // Показываем строку периода только на вкладках all/my
+  if(periodRow){
+    const showPeriod=(curTab==='all'||curTab==='my');
+    periodRow.style.display=showPeriod?'flex':'none';
+    if(showPeriod && periodLbl){
+      periodLbl.textContent=PERIOD_LABELS[tabStatPeriod[curTab]||'week']||'';
+    }
+  }
+
   bar.innerHTML=visibleCats().map(c=>{
     const n=base.filter(t=>t.status===c.id).length;
-    return `<div class="stat${statFilter===c.id?' af':''}" data-s="${c.id}" onclick="statF('${c.id}')"><div class="snum" style="color:${c.color}">${n}</div><div class="slbl">${esc(c.label)}</div></div>`;
+    return `<div class="stat${statFilter===c.id?' af':''}" data-s="${c.id}"><div class="snum" style="color:${c.color}">${n}</div><div class="slbl">${esc(c.label)}</div></div>`;
   }).join('');
+
+  // Вешаем обработчики: клик = фильтр, долгое нажатие = выбор периода
+  bar.querySelectorAll('.stat').forEach(el=>{
+    let holdTimer=null;
+    const cancel=()=>{ clearTimeout(holdTimer); holdTimer=null; el.classList.remove('holding'); };
+
+    el.addEventListener('pointerdown',()=>{
+      el.classList.add('holding');
+      holdTimer=setTimeout(()=>{
+        el.classList.remove('holding');
+        holdTimer=null;
+        openStatPeriodPicker();
+      },600);
+    });
+    el.addEventListener('pointerup',()=>{
+      if(holdTimer){ cancel(); statF(el.dataset.s); }
+    });
+    el.addEventListener('pointerleave',cancel);
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+}
+
+function openStatPeriodPicker(){
+  if(curTab!=='all'&&curTab!=='my') return;
+  const cur=tabStatPeriod[curTab]||'week';
+  const opts=[
+    {v:'day',l:'Сегодня',i:'📅'},
+    {v:'week',l:'Неделя',i:'📆'},
+    {v:'month',l:'Месяц',i:'🗓️'},
+    {v:'all',l:'Всё время',i:'♾️'},
+  ];
+  const tabName=curTab==='my'?'Мои':'Все';
+  document.getElementById('statPeriodTitle').textContent=`⏱ Период — «${tabName}»`;
+  document.getElementById('statPeriodGrid').innerHTML=opts.map(o=>`<div class="sopt${cur===o.v?' sel':''}" onclick="setStatPeriod('${o.v}')"><span class="si">${o.i}</span>${o.l}</div>`).join('');
+  openOv('statPeriodOv');
+}
+
+function setStatPeriod(p){
+  tabStatPeriod[curTab]=p;
+  closeOv('statPeriodOv');
+  updStats();
+  renderTasks();
 }
 
 function renderTasks(){
   if(curTab==='history'){ renderHistory(); return; }
   if(curTab==='report'){ renderReport(); return; }
   const wrap=document.getElementById('twrap');
-  const f=getFiltered(); updStats();
+  let f=getFiltered(); updStats();
   if(!f.length){ wrap.innerHTML='<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
   // Sort by selected mode
   const mode=taskSortMode||'manual';
@@ -1338,11 +1467,30 @@ function renderTasks(){
   } else if(mode==='oldest'){
     f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); });
   }
+  // Группируем задачи одной группы рядом (стабильная кластеризация внутри каждого статуса)
+  {
+    const buckets={}, order=[];
+    f.forEach(t=>{ const k=t.status+'|'+(t.taskGroup||('__single_'+t.id)); if(!buckets[k]){ buckets[k]=[]; order.push(k); } buckets[k].push(t); });
+    f=order.flatMap(k=>buckets[k]);
+  }
   const pc={high:'ph',medium:'pm',low:'pl'};
   const pt={high:'↑ 5',medium:'→ 3',low:'↓ 1'};
-  let html='', lastSt=null;
+  let html='', lastSt=null, lastGroup=null;
   f.forEach(task=>{
-    if(task.status!==lastSt){ const c=catById(task.status); html+=`<div class="glbl">${c.icon} ${c.label.toUpperCase()}</div>`; lastSt=task.status; }
+    if(task.status!==lastSt){ const c=catById(task.status); html+=`<div class="glbl">${c.icon} ${c.label.toUpperCase()}</div>`; lastSt=task.status; lastGroup=null; }
+    const tg=task.taskGroup||'';
+    if(tg!==lastGroup){
+      lastGroup=tg;
+      if(tg){
+        const gCnt=f.filter(t=>t.status===task.status&&(t.taskGroup||'')===tg).length;
+        const gClosed=collapsedGroups.has(tg);
+        html+=`<div class="taskGroupLbl" style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="toggleGroupCollapse('${jsArg(tg)}')">
+          <span class="subToggle ${gClosed?'':'open'}" style="width:18px;height:18px;font-size:12px;flex-shrink:0">›</span>
+          <span>${esc(tg)} · ${gCnt}</span>
+        </div>`;
+      }
+    }
+    if(tg&&collapsedGroups.has(tg)) return;
     const cat=catById(task.status);
     const subs=task.subtasks||[], ds=subs.filter(s=>s.done).length;
     const due=dueInfo(task);
@@ -1362,13 +1510,12 @@ function renderTasks(){
             <span class="tpr ${pc[task.priority]||'pm'}">${pt[task.priority]||''}</span>
             ${task.comments?.length?`<span class="tcomm">💬${task.comments.length}</span>`:''}
             ${subs.length?`<span class="tsub">☑${ds}/${subs.length}</span>`:''}
-            ${task.taskGroup?`<span class="tass">Группа: ${esc(task.taskGroup)}</span>`:''}
             ${task.date?`<span class="tass">📅${fmtTaskDate(task.date)}</span>`:''}
           </div>
           ${dep?`<div class="depLine">Группа: ${esc(dep.title)}</div>`:''}
         </div>
         <div class="ttools" onclick="event.stopPropagation()">
-          <select class="statusSel" onchange="chStatus('${task.id}',this.value)">${visibleCats().map(c=>`<option value="${c.id}" ${task.status===c.id?'selected':''}>${esc(c.label)}</option>`).join('')}</select>
+          <button class="stBtn ${task.status==='in-progress'?'status-inprogress':''}" style="background:${cat.color}22;color:${cat.color};border:1.5px solid ${cat.color}55" onclick="event.stopPropagation();openStatusDrop('${task.id}',this)">${cat.icon||''} ${esc(cat.label)} <span class="stArrow">▼</span></button>
           ${due.text?`<div class="dueBadge">${due.text}</div>`:''}
         </div>
       </div>
@@ -1492,20 +1639,9 @@ function extractAssigneeChain(task){
 
 function renderReport(){
   const wrap=document.getElementById('twrap');
-  const cats=visibleCats();
-  const by={};
-  tasks.forEach(t=>{
-    let chain=extractAssigneeChain(t);
-    if(!chain.length)chain=['Не назначен'];
-    chain.forEach(a=>{
-      if(!by[a]){by[a]={}; cats.forEach(c=>by[a][c.id]=0);}
-      if(by[a][t.status]===undefined) by[a][t.status]=0;
-      by[a][t.status]++;
-    });
-  });
   let h=`<div style="margin-bottom:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
     ${isAssistant(ME.role)?`<button class="btn btn-s" style="max-width:170px;padding:8px" onclick="openPublishUI()">📤 Опубликовать в группу</button>`:''}
-    <button class="btn btn-p" style="max-width:160px;padding:8px" onclick="downloadReport()">📥 Скачать Excel</button>
+    <button class="btn btn-p" style="max-width:170px;padding:8px" onclick="downloadReport()">📥 Скачать файлом</button>
   </div>`;
   h+=`<div class="sgrid" style="margin-bottom:10px">
     <div class="sopt ${downloadPeriod==='day'?'sel':''}" onclick="selectDownloadPeriod('day')"><span class="si">📅</span>День</div>
@@ -1517,16 +1653,6 @@ function renderReport(){
     <input class="fi" type="date" id="dlFrom" value="${downloadFrom}" style="max-width:none">
     <input class="fi" type="date" id="dlTo" value="${downloadTo}" style="max-width:none">
   </div>`;
-  h+=`<div style="background:var(--surf);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-    <div style="display:grid;grid-template-columns:1fr repeat(${cats.length},auto);gap:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--brd)">
-      <div>Сотрудник</div>${cats.map(c=>`<div style="text-align:center;color:${c.color}">${esc(c.label.slice(0,6))}</div>`).join('')}
-    </div>`;
-  Object.entries(by).forEach(([n,v])=>{
-    h+=`<div style="display:grid;grid-template-columns:1fr repeat(${cats.length},auto);gap:0;padding:9px 12px;border-bottom:1px solid var(--brd);font-size:13px;align-items:center">
-      <div style="font-weight:600">👤 ${esc(n)}</div>${cats.map(c=>`<div style="text-align:center;font-weight:700;color:${c.color}">${v[c.id]||0}</div>`).join('')}
-    </div>`;
-  });
-  h+='</div>';
   wrap.innerHTML=h;
 }
 
@@ -1549,19 +1675,15 @@ function reportRangePredicate(task){
   return d>=downloadFrom && d<=downloadTo;
 }
 async function downloadReport(){
-  showToast('Запрашиваем отчёт...');
+  const btn=document.querySelector('[onclick="downloadReport()"]');
+  if(btn){ btn.disabled=true; btn.textContent='Отправляем...'; }
   const from=document.getElementById('dlFrom'), to=document.getElementById('dlTo');
   if(from) downloadFrom=from.value||downloadFrom;
   if(to) downloadTo=to.value||downloadTo;
-  const r=await api('getReportCsv',{period:downloadPeriod,from:downloadFrom,to:downloadTo});
-  if(!r.ok){showToast('Ошибка получения отчёта');return;}
-  const blob=new Blob(['\uFEFF'+(r.csv||'')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='report_'+downloadPeriod+'_'+new Date().toISOString().split('T')[0]+'.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Отчёт скачан (CSV). Excel-файл придёт в группу в пятницу автоматически.');
+  const r=await api('sendReportFile',{period:downloadPeriod,from:downloadFrom,to:downloadTo});
+  if(btn){ btn.disabled=false; btn.textContent='📥 Скачать файлом'; }
+  if(!r.ok){ showToast('Ошибка: '+(r.error||'не удалось отправить')); return; }
+  showToast('✓ Excel-файл отправлен в группу Telegram!');
 }
 
 let selectedPeriod='day';
@@ -1649,6 +1771,7 @@ function renderDetail(){
     ${depRow}
     ${t.date?`<div class="det-row"><span class="lbl">Дедлайн</span>${fmtTaskDate(t.date)}</div>`:''}
     ${t.createdBy?`<div class="det-row"><span class="lbl">Создал</span>${esc(t.createdBy)}</div>`:''}
+    <div class="det-row"><span class="lbl">Статус</span><strong style="color:${cat.color}">${cat.icon||''} ${esc(cat.label)}</strong></div>
     <div class="divhr"></div>
     <div class="fl" style="margin-bottom:7px">Изменить статус</div>
     <div class="sgrid">${visibleCats().map(c=>`<div class="sopt ${t.status===c.id?'sel':''}" onclick="chStatus('${t.id}','${c.id}')"><span class="si">${c.icon}</span>${c.label}</div>`).join('')}</div>
@@ -1672,9 +1795,10 @@ async function reassignTask(id, newAssignee){
     t.assignee=newAssignee;
     t.history=t.history||[];
     t.history.push({who:ME.name,what:'Передал задачу: '+(oldAssignee||'не назначен')+' → '+(newAssignee||'не назначен'),when:nowStr()});
+    if(selTask&&selTask.id===id){ selTask.assignee=newAssignee; selTask.history=t.history; renderDetail(); }
     renderTasks();
     showToast(newAssignee?('Передано: '+newAssignee):'Снято назначение');
-  } else showToast('Ошибка передачи задачи');
+  } else showToast('Ошибка: '+(r.error||'не удалось сохранить'));
 }
 
 async function changeDependency(id, dependsOn){
@@ -1685,6 +1809,35 @@ async function changeDependency(id, dependsOn){
     if(selTask?.id===id) selTask.dependsOn=dependsOn;
     renderTasks(); renderDetail(); showToast('Зависимость обновлена');
   } else showToast(r.error||'Не удалось сохранить зависимость');
+}
+
+// Кастомный дропдаун статуса (задача 6)
+const STATUS_FIXED = [
+  {id:'todo',     label:'В очереди', icon:'🟠', color:'#fb923c'},
+  {id:'in-progress', label:'В работе', icon:'🟢', color:'#2dd4a8'},
+  {id:'done',     label:'Выполнено', icon:'✅', color:'#34d399'},
+  {id:'cancelled',label:'Отменено',  icon:'❌', color:'#f87171'},
+];
+let _stDropEl=null;
+function closeStatusDrop(){ if(_stDropEl){_stDropEl.remove();_stDropEl=null;} }
+function openStatusDrop(taskId, btn){
+  closeStatusDrop();
+  const t=tasks.find(x=>x.id===taskId); if(!t) return;
+  const drop=document.createElement('div');
+  drop.className='stDrop';
+  const rect=btn.getBoundingClientRect();
+  drop.style.top=(rect.bottom+4)+'px';
+  drop.style.right=(window.innerWidth-rect.right)+'px';
+  STATUS_FIXED.forEach(s=>{
+    const opt=document.createElement('div');
+    opt.className='stOpt'+(t.status===s.id?' active':'');
+    opt.innerHTML=`<span>${s.icon}</span><span style="color:${s.color}">${s.label}</span>`;
+    opt.onclick=(e)=>{ e.stopPropagation(); closeStatusDrop(); chStatus(taskId,s.id); };
+    drop.appendChild(opt);
+  });
+  document.body.appendChild(drop);
+  _stDropEl=drop;
+  setTimeout(()=>document.addEventListener('click',closeStatusDrop,{once:true}),0);
 }
 
 async function chStatus(id,status){
@@ -1726,8 +1879,17 @@ function fillAssigneeSelect(){
   const sel=document.getElementById('nAss');
   sel.innerHTML='<option value="">— не назначен —</option>'+staff.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('')+'<option value="__manual__">✏️ Ввести вручную...</option>';
   const dep=document.getElementById('nDepends');
-  if(dep) dep.innerHTML='<option value="">— нет —</option>'+tasks.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+  if(dep) dep.innerHTML='<option value="">— выберите родительскую задачу —</option>'+tasks.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+  // сбросить чекбокс зависимости
+  const cb=document.getElementById('nUseDepends');
+  if(cb){ cb.checked=false; toggleDependsField(false); }
   fillGroupSelect();
+}
+
+function toggleDependsField(on){
+  const f=document.getElementById('dependsField');
+  if(f) f.style.display=on?'block':'none';
+  if(!on){ const d=document.getElementById('nDepends'); if(d) d.value=''; }
 }
 
 // ---- GROUP MANAGEMENT ----
@@ -1741,7 +1903,42 @@ function fillGroupSelect(selId='nTaskGroup', selectedVal=''){
   const sel=document.getElementById(selId);
   if(!sel) return;
   const groups=getTaskGroups();
-  sel.innerHTML='<option value="">— без группы —</option>'+groups.map(g=>`<option value="${esc(g)}" ${g===selectedVal?'selected':''}>${esc(g)}</option>`).join('');
+  sel.innerHTML='<option value="">— без группы —</option>'+groups.map(g=>`<option value="${esc(g)}" ${g===selectedVal?'selected':''}>${esc(g)}</option>`).join('')+'<option value="__new__">✚ Создать новую группу...</option>';
+}
+
+function onTaskGroupChange(sel){
+  if(sel.value==='__new__'){
+    sel.value='';
+    const wrap=document.getElementById('nTaskGroupNewWrap');
+    if(wrap){ wrap.style.display='block'; setTimeout(()=>document.getElementById('nTaskGroupNew')?.focus(),100); }
+  }
+}
+
+function confirmInlineGroup(){
+  const inp=document.getElementById('nTaskGroupNew');
+  const name=(inp?.value||'').trim();
+  if(!name){ showToast('Введите название группы'); inp?.focus(); return; }
+  const sel=document.getElementById('nTaskGroup');
+  if(sel){
+    if(![...sel.options].some(o=>o.value===name)){
+      // insert before __new__ option
+      const newOpt=document.createElement('option');
+      newOpt.value=name; newOpt.textContent=name;
+      const newOpt2=sel.querySelector('option[value="__new__"]');
+      sel.insertBefore(newOpt, newOpt2||null);
+    }
+    sel.value=name;
+  }
+  const wrap=document.getElementById('nTaskGroupNewWrap');
+  if(wrap){ wrap.style.display='none'; if(inp) inp.value=''; }
+  showToast('Группа создана: '+name);
+}
+
+function cancelInlineGroup(){
+  const wrap=document.getElementById('nTaskGroupNewWrap');
+  if(wrap){ wrap.style.display='none'; }
+  const inp=document.getElementById('nTaskGroupNew');
+  if(inp) inp.value='';
 }
 
 function openNewGroupModal(){
@@ -1761,7 +1958,8 @@ function confirmNewGroup(){
     if(![...sel.options].some(o=>o.value===name)){
       const opt=document.createElement('option');
       opt.value=name; opt.textContent=name;
-      sel.appendChild(opt);
+      const newOpt2=sel.querySelector('option[value="__new__"]');
+      sel.insertBefore(opt, newOpt2||null);
     }
     sel.value=name;
   }
@@ -1906,12 +2104,34 @@ function openAdd(){
   openOv('addOv');
 }
 
-function openPersonalStats(){
-  const mine=tasks.filter(t=>t.createdBy===ME.name||t.assignee===ME.name);
-  const created=tasks.filter(t=>t.createdBy===ME.name).length;
-  const rows=visibleCats().map(c=>`<div class="teamRow"><div><div class="aname">${c.icon} ${esc(c.label)}</div><div class="teamRole">Личные задачи</div></div><strong style="color:${c.color}">${mine.filter(t=>t.status===c.id).length}</strong></div>`).join('');
-  document.getElementById('statsCont').innerHTML=`<div class="teamTable"><div class="teamRow"><div><div class="aname">${esc(ME.name)}</div><div class="teamRole">${roleNameRuShort(ME.role)}</div></div><strong>${created}</strong></div>${rows}</div>`;
+let statsPeriod='all', statsTargetName=null;
+function openPersonalStats(name, role){
+  statsTargetName = name || ME.name;
+  statsPeriod = 'all';
+  renderPersonalStats();
   openOv('statsOv');
+}
+function selectStatsPeriod(p){ statsPeriod=p; renderPersonalStats(); }
+function renderPersonalStats(){
+  const name = statsTargetName;
+  const isMe = name===ME.name;
+  const roleTxt = isMe ? roleNameRuShort(ME.role) : ((staff.find(s=>s.name===name)||{}).role ? roleNameRuShort(staff.find(s=>s.name===name).role) : '');
+  const mine=tasks.filter(t=>t.createdBy===name||t.assignee===name);
+  const created=tasks.filter(t=>t.createdBy===name).length;
+  const rows=visibleCats().map(c=>`<div class="teamRow"><div><div class="aname">${c.icon} ${esc(c.label)}</div><div class="teamRole">Личные задачи</div></div><strong style="color:${c.color}">${mine.filter(t=>t.status===c.id).length}</strong></div>`).join('');
+  const periodBar = isAssistant(ME.role) ? `<div class="sgrid" style="margin:10px 0">
+      <div class="sopt ${statsPeriod==='day'?'sel':''}" onclick="selectStatsPeriod('day')"><span class="si">📅</span>День</div>
+      <div class="sopt ${statsPeriod==='week'?'sel':''}" onclick="selectStatsPeriod('week')"><span class="si">📆</span>Неделя</div>
+      <div class="sopt ${statsPeriod==='month'?'sel':''}" onclick="selectStatsPeriod('month')"><span class="si">🗓️</span>Месяц</div>
+      <div class="sopt ${statsPeriod==='all'?'sel':''}" onclick="selectStatsPeriod('all')"><span class="si">♾️</span>Всё время</div>
+    </div>` : '';
+  const pubBtn = isAssistant(ME.role) ? `<button class="btn btn-p" style="max-width:none;margin-top:8px" onclick="publishPersonalStats('${jsArg(name)}')">📤 Опубликовать в группу</button>` : '';
+  document.getElementById('statsCont').innerHTML=`<div class="teamTable"><div class="teamRow"><div><div class="aname">${esc(name)}</div><div class="teamRole">${roleTxt}</div></div><strong>${created}</strong></div>${rows}</div>${periodBar}${pubBtn}`;
+}
+async function publishPersonalStats(name){
+  const r=await api('publishPersonalStats',{targetName:name,period:statsPeriod});
+  if(r.ok) showToast('Статистика опубликована в группе');
+  else showToast(r.error||'Ошибка публикации');
 }
 
 function toggleSubEditor(on){
@@ -1976,9 +2196,9 @@ function renderStaff(){
   const roleOpts = ['manager','director','assistant'].map(r=>`<option value="${r}">${rl[r]}</option>`).join('');
   document.getElementById('staffList').innerHTML = staff.length
     ? staff.map(s=>`
-      <div class="aitem">
+      <div class="aitem" ondblclick="openPersonalStats('${jsArg(s.name)}','${s.role}')">
         <div><div class="aname">${esc(s.name)}</div><div class="arole">${rl[s.role]||s.role}</div></div>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">
           ${isAsst ? `<select class="fs" style="max-width:130px;padding:4px 8px;font-size:11px" onchange="changeRole('${s.id}',this.value)">${['manager','director','assistant'].map(r=>`<option value="${r}" ${s.role===r?'selected':''}>${rl[r]}</option>`).join('')}</select>` : ''}
           ${isAsst ? `<button class="delbtn" oncontextmenu="return false" onpointerdown="holdDelSt('${s.id}')" onpointerup="cancelHoldDelSt()" onpointerleave="cancelHoldDelSt()">✕</button>` : ''}
         </div>
