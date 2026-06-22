@@ -106,12 +106,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .tdBtn{font-size:12px;font-weight:600;color:var(--acc);background:var(--acc-s);border:none;border-radius:9px;padding:5px 11px;cursor:pointer}
 
 /* STATS */
-.sbar{display:flex;gap:6px;padding:10px 16px 0}
-.stat{flex:1;background:var(--surf);border:1.5px solid var(--brd);border-radius:14px;padding:10px 5px 8px;text-align:center;cursor:pointer;transition:transform .12s,border-color .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.07);user-select:none;-webkit-user-select:none;position:relative}
-.stat.af,.stat:active{border-color:var(--acc);background:var(--acc-s);transform:scale(.97)}
-.stat.holding{transform:scale(.93);border-color:var(--acc)}
-.snum{font-size:20px;font-weight:800;line-height:1;margin-bottom:3px}
-.slbl{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sbar{display:flex;gap:8px;padding:12px 16px 4px}
+.stat{flex:1;background:var(--surf2);border:2px solid var(--brd);border-radius:14px;padding:12px 6px 10px;text-align:center;cursor:pointer;transition:transform .12s,border-color .2s,background .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,.18);user-select:none;-webkit-user-select:none;position:relative;border-top:4px solid var(--stat-color,var(--acc))}
+.stat.af,.stat:active{border-color:var(--stat-color,var(--acc));background:var(--acc-s);transform:scale(.97);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.stat.holding{transform:scale(.93);border-color:var(--stat-color,var(--acc))}
+.snum{font-size:24px;font-weight:900;line-height:1;margin-bottom:4px}
+.slbl{font-size:9px;color:var(--txt);font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.75}
 .sbar-period{display:flex;align-items:center;justify-content:flex-end;padding:4px 16px 0;gap:4px;font-size:10px;color:var(--muted);font-weight:600}
 .sbar-period-btn{background:none;border:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer;padding:0 2px}
 
@@ -129,6 +129,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .twrap{padding:10px 16px 90px}
 .glbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:12px 0 6px 4px}
 .tc{background:var(--surf);border:none;border-radius:16px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:transform .12s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tc-dep{margin-left:20px;border-left:3px solid var(--brd)}
 .tc.due-none{background:rgba(74,222,128,.07);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .tc.due-green{box-shadow:inset 3px 0 0 #34d399,0 1px 3px rgba(0,0,0,.06)}
 .tc.due-blue{box-shadow:inset 3px 0 0 #60a5fa,0 1px 3px rgba(0,0,0,.06)}
@@ -148,6 +149,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 [data-density=spacious] .twrap{padding:12px 18px 90px}
 [data-density=spacious] .sbar2{padding:8px 15px 10px 33px}
 .tdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.tdot.pulse-emerald{animation:pulseEmerald 1.4s ease-in-out infinite}
+.tdot.pulse-orange{animation:pulseOrange 1.4s ease-in-out infinite}
+@keyframes pulseEmerald{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.7);background:#10b981}50%{box-shadow:0 0 0 5px rgba(16,185,129,0);background:#34d399}}
+@keyframes pulseOrange{0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,.7);background:#fb923c}50%{box-shadow:0 0 0 5px rgba(251,146,60,0);background:#fdba74}}
 .tb{flex:1;min-width:0}
 .tt{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:4px;word-break:break-word;letter-spacing:-.1px;display:flex;align-items:center;gap:4px}
 .tmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -278,7 +283,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .groupTitleEdit{display:flex;gap:8px;align-items:center}.groupTitleEdit .fi{max-width:none}
 .iconBtn{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:4px 7px;font-size:14px;cursor:pointer;line-height:1;transition:background .15s}
 .iconBtn:active{background:var(--brd)}
-.taskGroupLbl{font-size:10px;color:var(--muted);margin:8px 0 5px 31px;text-transform:uppercase;letter-spacing:.45px}
+.taskGroupLbl{font-size:12px;color:var(--txt);font-weight:700;margin:10px 0 5px 31px;text-transform:uppercase;letter-spacing:.6px;opacity:.85;background:var(--surf2);border-left:3px solid var(--accent);padding:4px 8px;border-radius:0 6px 6px 0}
 .depLine{font-size:11px;color:var(--muted);margin-top:3px}
 .dragHandle{font-size:14px;color:var(--muted);padding:0 2px;cursor:grab}
 .tc.dragging{opacity:.5}.tc.dragOver{outline:1px solid var(--acc)}
@@ -428,6 +433,27 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 </div>
 
 <!-- DETAIL -->
+<!-- EDIT TASK -->
+<div class="ov" id="editOv">
+<div class="modal">
+  <div class="hndl"></div>
+  <div class="mtitle">Редактировать задачу</div>
+  <div class="fg"><label class="fl">Тема *</label><input class="fi" id="eTtl" style="max-width:100%"></div>
+  <div class="fg"><label class="fl">Подтема</label><input class="fi" id="eSub" placeholder="Уточнение к теме" style="max-width:100%"></div>
+  <div class="fg"><label class="fl">Группа</label><select class="fs" id="eTg" style="max-width:100%"><option value="">— без группы —</option></select></div>
+  <div class="fg">
+    <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="eUseDepends" onchange="document.getElementById('eDependsWrap').style.display=this.checked?'block':'none'"> Подзадача (зависит от другой задачи)</label>
+    <div id="eDependsWrap" style="display:none;margin-top:8px"><select class="fs" id="eDepends" style="max-width:100%"><option value="">— выберите родительскую задачу —</option></select></div>
+  </div>
+  <div class="fg"><label class="fl">Дедлайн</label><input class="fi" type="date" id="eDL" style="max-width:100%"></div>
+  <div class="fg"><label class="fl">Срочность</label>
+    <select class="fs" id="ePr" style="max-width:100%">
+      <option value="medium">Средняя</option><option value="high">Высокая ↑</option><option value="low">Низкая ↓</option>
+    </select>
+  </div>
+  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('editOv')">Отмена</button><button class="btn btn-p" id="editSaveBtn" onclick="confirmEditTask()">Сохранить</button></div>
+</div>
+</div>
 <div class="ov" id="detOv"><div class="modal"><div class="hndl"></div><div id="detCont"></div></div></div>
 
 <!-- NEW GROUP MODAL -->
@@ -598,7 +624,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 </div>
 
 <!-- HIST TASK -->
-<div class="ov" id="histOv"><div class="modal"><div class="hndl"></div><div class="mtitle">История задачи</div><div id="histCont"></div><button class="btn btn-s" onclick="closeOv('histOv')" style="margin-top:8px">Закрыть</button></div></div>
+<div class="ov" id="histOv"><div class="modal"><div class="hndl"></div><div class="mtitle">История задачи</div><div id="histCont"></div><div class="divhr" id="histNoteSep" style="display:none"></div><div id="histNoteWrap" style="display:none"><div class="fl" style="margin-bottom:6px">📝 Добавить заметку</div><div class="crow"><textarea class="fta" id="histNoteInp" rows="2" placeholder="Заметка к истории..." style="max-width:none;flex:1;resize:vertical"></textarea><button class="sndBtn" onclick="addHistNote()" style="align-self:flex-end;margin-left:6px">➤</button></div></div><button class="btn btn-s" onclick="closeOv('histOv')" style="margin-top:8px">Закрыть</button></div></div>
 
 <div class="ov" id="delStaffOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Исключить участника</div><div id="delStaffMsg" style="margin:12px 0;color:var(--fg2);font-size:15px"></div><div class="btn-row"><button class="btn btn-s" onclick="closeOv('delStaffOv')">Отмена</button><button class="btn" id="delStaffConfBtn" style="background:#e53935;color:#fff" onclick="delStaffConfirmed()">Исключить</button></div></div></div>
 
@@ -1239,25 +1265,37 @@ function statF(s){
 // ============================================================
 // FILTER CHIPS
 // ============================================================
+let _assigneeChipsOpen=false;
 function buildChips(){
   const row=document.getElementById('frow');
-  row.innerHTML='<button class="chip on" data-f="all">Все</button>';
+  row.innerHTML='';
+  // Кнопка "Все" — двойная функция: фильтр + раскрыть/свернуть исполнителей
+  const allBtn=document.createElement('button');
+  allBtn.className='chip on'; allBtn.dataset.f='all';
+  allBtn.textContent='Все ' + (_assigneeChipsOpen ? '▲' : '▼');
+  allBtn.onclick=()=>{
+    _assigneeChipsOpen=!_assigneeChipsOpen;
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    allBtn.classList.add('on'); actF='all'; buildChips(); renderTasks();
+  };
+  row.appendChild(allBtn);
   visibleCats().forEach(c=>{
     const b=document.createElement('button');
     b.className='chip'; b.dataset.f=c.id; b.textContent=c.icon+' '+c.label;
     b.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); b.classList.add('on'); actF=c.id; renderTasks(); };
     row.appendChild(b);
   });
-  staff.forEach(s=>{
-    const c=document.createElement('button');
-    c.className='chip ac'; c.dataset.f='a:'+s.name; c.textContent='👤 '+s.name;
-    c.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); actF='a:'+s.name; renderTasks(); };
-    row.appendChild(c);
-  });
-  row.querySelector('[data-f="all"]').onclick=()=>{
-    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
-    row.querySelector('[data-f="all"]').classList.add('on'); actF='all'; renderTasks();
-  };
+  if(_assigneeChipsOpen){
+    staff.forEach(s=>{
+      const c=document.createElement('button');
+      c.className='chip ac'; c.dataset.f='a:'+s.name; c.textContent='👤 '+s.name;
+      c.onclick=()=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); actF='a:'+s.name; renderTasks(); };
+      row.appendChild(c);
+    });
+  }
+  // Восстановить активный фильтр
+  const active=row.querySelector(`[data-f="${actF}"]`);
+  if(active){ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); active.classList.add('on'); }
 }
 
 // ============================================================
@@ -1398,7 +1436,7 @@ function updStats(){
 
   bar.innerHTML=visibleCats().map(c=>{
     const n=base.filter(t=>t.status===c.id).length;
-    return `<div class="stat${statFilter===c.id?' af':''}" data-s="${c.id}"><div class="snum" style="color:${c.color}">${n}</div><div class="slbl">${esc(c.label)}</div></div>`;
+    return `<div class="stat${statFilter===c.id?' af':''}" data-s="${c.id}" style="--stat-color:${c.color}"><div class="snum" style="color:${c.color}">${n}</div><div class="slbl">${esc(c.label)}</div></div>`;
   }).join('');
 
   // Вешаем обработчики: клик = фильтр, долгое нажатие = выбор периода
@@ -1496,10 +1534,10 @@ function renderTasks(){
     const due=dueInfo(task);
     const dep=task.dependsOn?tasks.find(x=>x.id===task.dependsOn):null;
     const open=!!task._subsOpen;
-    html+=`<div class="tc ${task.status==='done'?'tdone':''} ${due.cls}" data-id="${task.id}" draggable="${canEdit(ME.role)}">
+    html+=`<div class="tc ${task.status==='done'?'tdone':''} ${due.cls} ${dep?'tc-dep':''}" data-id="${task.id}" draggable="${canEdit(ME.role)}">
       <div class="tm">
         <div class="dragHandle" onclick="event.stopPropagation()">☰${canEdit(ME.role)?`<div style="display:flex;gap:2px;margin-top:4px"><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',-1)">↑</button><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',1)">↓</button></div>`:''}</div>
-        <div class="tdot" style="background:${cat.color}"></div>
+        <div class="tdot ${task.status==='in-progress'?'pulse-emerald':task.status==='todo'?'pulse-orange':''}" style="background:${cat.color}"></div>
         <div class="tb">
           <div class="tt">
             ${subs.length?`<button class="subToggle ${open?'open':''}" onclick="event.stopPropagation();toggleSubs('${task.id}')">›</button>`:'<span style="display:inline-block;width:26px"></span>'}
@@ -1773,13 +1811,13 @@ function renderDetail(){
     ${t.createdBy?`<div class="det-row"><span class="lbl">Создал</span>${esc(t.createdBy)}</div>`:''}
     <div class="det-row"><span class="lbl">Статус</span><strong style="color:${cat.color}">${cat.icon||''} ${esc(cat.label)}</strong></div>
     <div class="divhr"></div>
-    <div class="fl" style="margin-bottom:7px">Изменить статус</div>
     <div class="sgrid">${visibleCats().map(c=>`<div class="sopt ${t.status===c.id?'sel':''}" onclick="chStatus('${t.id}','${c.id}')"><span class="si">${c.icon}</span>${c.label}</div>`).join('')}</div>
     <div class="divhr"></div>
     <div class="fl" style="margin-bottom:7px">Комментарии</div>
     <div class="clist">${commH}</div>
     <div class="crow"><input class="fi" id="cInp" placeholder="Написать..." style="flex:1;max-width:none"><button class="sndBtn" onclick="sendComm()">➤</button></div>
     ${canHist(ME.role)?`<div class="divhr"></div><button class="btn btn-s" onclick="openTaskHist('${t.id}')" style="width:100%">📜 История изменений</button>`:''}
+    ${canEdit(ME.role)?`<div class="divhr"></div><button class="btn btn-s" onclick="openEditTask('${t.id}')" style="width:100%">✏️ Редактировать задачу</button>`:''}
     ${canEdit(ME.role)?`<div class="divhr"></div><button class="btn btn-d" onclick="delTask('${t.id}')" style="width:100%">🗑 Удалить</button>`:''}
     <button class="btn btn-s" onclick="closeOv('detOv')" style="width:100%;margin-top:7px">Закрыть</button>
   `;
@@ -1866,13 +1904,117 @@ async function delTask(id){
   closeOv('detOv'); renderAll(); showToast('Задача удалена');
 }
 
+let editTaskId=null;
+function openEditTask(id){
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  editTaskId=id;
+  document.getElementById('eTtl').value=t.title||'';
+  document.getElementById('eSub').value=t.desc||'';
+  // deadline — only date part
+  const dl=(t.date||'').split(' ')[0]||'';
+  document.getElementById('eDL').value=dl;
+  document.getElementById('ePr').value=t.priority||'medium';
+  // groups
+  const tgSel=document.getElementById('eTg');
+  const grps=[...new Set(tasks.map(x=>x.taskGroup||'').filter(Boolean))];
+  tgSel.innerHTML='<option value="">— без группы —</option>'+grps.map(g=>`<option value="${esc(g)}" ${g===t.taskGroup?'selected':''}>${esc(g)}</option>`).join('');
+  // depends
+  const depSel=document.getElementById('eDepends');
+  depSel.innerHTML='<option value="">— выберите родительскую задачу —</option>'+tasks.filter(x=>x.id!==id&&!wouldCycleFront(id,x.id)).map(x=>`<option value="${esc(x.id)}" ${t.dependsOn===x.id?'selected':''}>${esc(x.title)}</option>`).join('');
+  const hasDepends=!!t.dependsOn;
+  document.getElementById('eUseDepends').checked=hasDepends;
+  document.getElementById('eDependsWrap').style.display=hasDepends?'block':'none';
+  closeOv('detOv');
+  openOv('editOv');
+}
+
+async function confirmEditTask(){
+  const id=editTaskId; if(!id)return;
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  const title=document.getElementById('eTtl').value.trim();
+  if(!title){showToast('Введите тему задачи');return;}
+  const desc=document.getElementById('eSub').value.trim();
+  const date=document.getElementById('eDL').value;
+  const priority=document.getElementById('ePr').value;
+  const taskGroup=document.getElementById('eTg').value;
+  const useDepends=document.getElementById('eUseDepends').checked;
+  const dependsOn=useDepends?document.getElementById('eDepends').value:'';
+  const btn=document.getElementById('editSaveBtn'); btn.disabled=true; btn.textContent='Сохраняем...';
+  const r=await api('updateTask',{id,title,desc,date,priority,taskGroup,dependsOn});
+  if(r.ok){
+    Object.assign(t,{title,desc,date,priority,taskGroup,dependsOn});
+    closeOv('editOv'); renderAll(); showToast('Задача обновлена ✓');
+  } else { showToast(r.error||'Ошибка сохранения'); }
+  btn.disabled=false; btn.textContent='Сохранить';
+}
+
 function openTaskHist(id){
   const t=tasks.find(x=>x.id===id); if(!t)return;
   const entries=t.history||[];
-  document.getElementById('histCont').innerHTML=entries.length
-    ?entries.map(e=>`<div class="hentry"><div class="hwho">${esc(e.who)}</div><div class="hwhat">${esc(e.what)}</div><div class="hwhen">${e.when}</div></div>`).join('')
-    :'<div style="color:var(--muted);font-size:13px">Пусто</div>';
+  const comments=t.comments||[];
+  const cat=catById(t.status);
+  // Кто выполнил — ищем запись о смене статуса на "done"
+  const doneEntry=entries.slice().reverse().find(e=>e.what&&e.what.includes('done'));
+  const completedBy=doneEntry?doneEntry.who:(t.status==='done'&&t.assignee?t.assignee:null);
+
+  let html=`
+    <div style="background:var(--surf2);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">${esc(t.title)}</div>
+      ${t.desc?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${esc(t.desc)}</div>`:''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px">
+        <span><strong style="color:${cat.color}">${cat.icon||''} ${cat.label}</strong></span>
+        ${t.assignee?`<span>👤 ${esc(t.assignee)}</span>`:''}
+        ${completedBy?`<span>✅ Выполнил: <strong>${esc(completedBy)}</strong></span>`:''}
+        ${t.createdBy?`<span>✍️ Создал: ${esc(t.createdBy)}</span>`:''}
+      </div>
+    </div>`;
+
+  if(comments.length){
+    html+=`<div class="fl" style="margin-bottom:6px">💬 Комментарии</div>`;
+    html+=comments.map(c=>`<div class="hentry">
+      <div class="hwho">${esc(c.author)}</div>
+      <div class="hwhat">${esc(c.text)}</div>
+      <div class="hwhen">${c.time||''}</div>
+    </div>`).join('');
+    html+=`<div class="divhr"></div>`;
+  }
+
+  if(entries.length){
+    html+=`<div class="fl" style="margin-bottom:6px">📋 Изменения</div>`;
+    html+=entries.slice().reverse().map(e=>`<div class="hentry">
+      <div class="hwho">${esc(e.who)}</div>
+      <div class="hwhat">${esc(e.what)}</div>
+      <div class="hwhen">${e.when||''}</div>
+    </div>`).join('');
+  } else if(!comments.length){
+    html+='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0">История пуста</div>';
+  }
+
+  document.getElementById('histCont').innerHTML=html;
+  document.getElementById('histNoteWrap').style.display='block';
+  document.getElementById('histNoteSep').style.display='block';
+  document.getElementById('histNoteInp').value='';
+  document.getElementById('histNoteInp')._taskId=id;
   openOv('histOv');
+}
+
+async function addHistNote(){
+  const inp=document.getElementById('histNoteInp');
+  const text=inp.value.trim(); if(!text)return;
+  const id=inp._taskId; if(!id)return;
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  const btn=document.querySelector('#histNoteWrap .sndBtn');
+  if(btn){btn.disabled=true;}
+  const r=await api('addHistoryNote',{id,note:text});
+  if(r.ok){
+    const entry={who:ME.name,what:'📝 Заметка: '+text,when:nowStr()};
+    t.history=t.history||[];
+    t.history.push(entry);
+    inp.value='';
+    showToast('Заметка добавлена');
+    openTaskHist(id);
+  } else { showToast(r.error||'Ошибка'); }
+  if(btn){btn.disabled=false;}
 }
 
 function fillAssigneeSelect(){
@@ -2126,12 +2268,18 @@ function renderPersonalStats(){
       <div class="sopt ${statsPeriod==='all'?'sel':''}" onclick="selectStatsPeriod('all')"><span class="si">♾️</span>Всё время</div>
     </div>` : '';
   const pubBtn = isAssistant(ME.role) ? `<button class="btn btn-p" style="max-width:none;margin-top:8px" onclick="publishPersonalStats('${jsArg(name)}')">📤 Опубликовать в группу</button>` : '';
-  document.getElementById('statsCont').innerHTML=`<div class="teamTable"><div class="teamRow"><div><div class="aname">${esc(name)}</div><div class="teamRole">${roleTxt}</div></div><strong>${created}</strong></div>${rows}</div>${periodBar}${pubBtn}`;
+  const dmBtn = isMe ? `<button class="btn btn-s" style="max-width:none;margin-top:8px" onclick="sendStatsDM()">📩 Отправить себе в ЛС</button>` : '';
+  document.getElementById('statsCont').innerHTML=`<div class="teamTable"><div class="teamRow"><div><div class="aname">${esc(name)}</div><div class="teamRole">${roleTxt}</div></div><strong>${created}</strong></div>${rows}</div>${periodBar}${pubBtn}${dmBtn}`;
 }
 async function publishPersonalStats(name){
   const r=await api('publishPersonalStats',{targetName:name,period:statsPeriod});
   if(r.ok) showToast('Статистика опубликована в группе');
   else showToast(r.error||'Ошибка публикации');
+}
+async function sendStatsDM(){
+  const r=await api('sendPersonalStatsDM',{userId:ME.id,targetName:ME.name,period:statsPeriod});
+  if(r.ok) showToast('Статистика отправлена в ЛС ✓');
+  else showToast(r.error||'Ошибка отправки в ЛС');
 }
 
 function toggleSubEditor(on){
