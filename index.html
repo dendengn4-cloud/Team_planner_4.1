@@ -49,6 +49,7 @@
 body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var(--fs);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:0}
 
+/* LOGIN */
 #loginWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;gap:12px;text-align:center}
 .l-icon{font-size:48px}.l-title{font-size:22px;font-weight:700;letter-spacing:-.4px}.l-sub{font-size:13px;color:var(--muted);line-height:1.5}
 .fi,.fs,.fta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:12px;color:var(--txt);font-family:var(--font);font-size:15px;padding:11px 14px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;max-width:300px}
@@ -1379,6 +1380,19 @@ function getFiltered(){
     return dateOnly(t.date)>=ds;
   });
   if(curTab==='my') f=f.filter(t=>t.assignee&&t.assignee.toLowerCase()===ME.name.toLowerCase());
+  // Фильтр по периоду (для вкладок all и my)
+  if(curTab==='all'||curTab==='my'){
+    const period=tabStatPeriod[curTab]||'all';
+    if(period!=='all'){
+      const now=new Date();
+      let from=new Date(now);
+      if(period==='day'){ from.setHours(0,0,0,0); }
+      else if(period==='week'){ from.setDate(now.getDate()-6); from.setHours(0,0,0,0); }
+      else if(period==='month'){ from.setDate(now.getDate()-29); from.setHours(0,0,0,0); }
+      const fromStr=from.toISOString().split('T')[0];
+      f=f.filter(t=>{ const d=dateOnly(t.date||t.createdAt||''); return d>=fromStr; });
+    }
+  }
   if(statFilter) f=f.filter(t=>t.status===statFilter);
   else if(actF!=='all'){
     if(actF.startsWith('a:')){ const nm=actF.slice(2); f=f.filter(t=>t.assignee===nm); }
@@ -2439,6 +2453,9 @@ function openOv(id){ if(id==='settOv'){ openSettUI(); return; } document.getElem
 function closeOv(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
+// ============================================================
+// HELPERS
+// ============================================================
 function showToast(m,pos){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('top',pos==='top'); t.classList.add('show'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show','top'),pos==='top'?5000:2500); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function jsArg(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '); }
