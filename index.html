@@ -49,7 +49,40 @@
 body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var(--fs);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:0}
 
-/* LOGIN */
+/* ======== GANTT ======== */
+.gantt-wrap{padding:12px 8px 90px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gantt-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:0 8px}
+.gantt-header select{background:var(--surf2);border:1px solid var(--brd);color:var(--txt);border-radius:8px;padding:5px 8px;font-size:12px}
+.gantt-table{min-width:600px;width:max-content;border-collapse:collapse}
+.gantt-table th{font-size:10px;font-weight:600;color:var(--muted);text-align:center;padding:4px 2px;border-bottom:1px solid var(--brd);min-width:28px;white-space:nowrap}
+.gantt-table th.today-col{color:var(--acc);border-bottom:2px solid var(--acc)}
+.gantt-row{border-bottom:1px solid rgba(255,255,255,.04)}
+.gantt-row:hover{background:var(--surf2)}
+.gantt-row td{vertical-align:middle;padding:3px 2px}
+.gantt-name{font-size:12px;max-width:130px;min-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 8px;position:sticky;left:0;background:var(--bg);z-index:2}
+.gantt-row:hover .gantt-name{background:var(--surf2)}
+.gantt-bar-cell{position:relative;height:28px;min-width:28px}
+.gantt-bar{position:absolute;top:6px;height:16px;border-radius:6px;opacity:.9;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;overflow:hidden}
+.gantt-bar:hover{opacity:1;filter:brightness(1.15)}
+.gantt-bar span{font-size:9px;color:#fff;font-weight:700;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--acc);opacity:.5;pointer-events:none;z-index:3}
+.gantt-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin:0 auto;border:2px solid var(--brd)}
+.gantt-empty{text-align:center;padding:40px 16px;color:var(--muted);font-size:13px}
+/* ======== KANBAN ======== */
+.kanban-wrap{padding:10px 12px 90px;overflow-x:auto;display:flex;gap:10px;min-height:calc(100vh - 220px)}
+.kb-col{flex:0 0 220px;display:flex;flex-direction:column;gap:6px}
+.kb-col-head{background:var(--surf2);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;position:sticky;top:0}
+.kb-col-head .kbcount{background:var(--surf);border-radius:6px;padding:1px 6px;font-size:11px;color:var(--muted)}
+.kb-card{background:var(--surf);border:1px solid var(--brd);border-radius:10px;padding:9px 10px;cursor:pointer;transition:transform .12s,box-shadow .12s;border-left:3px solid var(--acc)}
+.kb-card:active{transform:scale(.97)}
+.kb-card-title{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:4px}
+.kb-card-sub{font-size:11px;color:var(--muted);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kb-card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.kb-badge{font-size:10px;border-radius:5px;padding:1px 5px;font-weight:600;background:var(--surf2);color:var(--muted)}
+.kb-badge.deadline{color:var(--yellow);background:rgba(251,191,36,.12)}
+.kb-badge.deadline.over{color:var(--red);background:rgba(248,113,113,.12)}
+.kb-badge.ass{color:var(--blue);background:rgba(96,165,250,.12)}
+
 #loginWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;gap:12px;text-align:center}
 .l-icon{font-size:48px}.l-title{font-size:22px;font-weight:700;letter-spacing:-.4px}.l-sub{font-size:13px;color:var(--muted);line-height:1.5}
 .fi,.fs,.fta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:12px;color:var(--txt);font-family:var(--font);font-size:15px;padding:11px 14px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;max-width:300px}
@@ -279,6 +312,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 .calendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .calDay{min-height:44px;border-radius:10px;background:var(--surf2);padding:5px;font-size:11px}
 .calDay.mark{outline:1px solid var(--acc);background:var(--acc-s)}
+.holidayBanner{background:#ff6b6b;color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-weight:700;font-size:13px;text-align:center}
+.statsTable{width:100%;border-collapse:collapse;margin:0 0 8px;table-layout:fixed}
+.statsTable th{font-size:11px;font-weight:600;color:var(--muted);padding:4px 2px;text-align:center}
+.statsTable td{font-size:18px;font-weight:700;text-align:center;padding:2px 2px 8px;color:var(--txt)}
+.calDay.holiday{background:#ffe4e4;outline:1px solid #ff6b6b}
+.calDay.holiday strong{color:#d63333}
+.calDay.today strong{text-decoration:underline}
 .colorInput{width:34px;height:34px;border:none;background:transparent;padding:0;flex-shrink:0}
 .groupTitleEdit{display:flex;gap:8px;align-items:center}.groupTitleEdit .fi{max-width:none}
 .iconBtn{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:4px 7px;font-size:14px;cursor:pointer;line-height:1;transition:background .15s}
@@ -336,8 +376,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
       <div class="tab" data-tab="history" id="histTab" style="display:none">История</div>
       <div class="tab" data-tab="report" id="repTab">Отчёт</div>
       <div class="tab" data-tab="staff" id="staffTab" style="display:none">Состав</div>
+      <div class="tab" data-tab="gantt">Гант</div>
+      <div class="tab" data-tab="kanban">Канбан</div>
     </div>
   </div>
+  <table class="statsTable" id="statsTable"></table>
   <div class="dstrip">
     <div class="dnav">
       <button class="dBtn" onclick="shiftDay(-1)">‹</button>
@@ -589,27 +632,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 </div>
 </div>
 
-<!-- PUBLISH REPORT -->
-<div class="ov" id="pubOv">
-<div class="modal">
-  <div class="hndl"></div>
-  <div class="mtitle">Опубликовать отчёт в группу</div>
-  <div class="sgrid" style="margin-bottom:12px">
-    <div class="sopt sel" data-period="day" onclick="selectPeriod('day')"><span class="si">📅</span>День</div>
-    <div class="sopt" data-period="week" onclick="selectPeriod('week')"><span class="si">📆</span>Неделя</div>
-    <div class="sopt" data-period="month" onclick="selectPeriod('month')"><span class="si">🗓️</span>Месяц</div>
-    <div class="sopt" data-period="custom" onclick="selectPeriod('custom')"><span class="si">✏️</span>Свой период</div>
-  </div>
-  <div id="pubCustomRange" style="display:none">
-    <div class="fgrow">
-      <div class="fg" style="flex:1"><label class="fl">С</label><input class="fi" type="date" id="pubFrom" style="max-width:100%"></div>
-      <div class="fg" style="flex:1"><label class="fl">По</label><input class="fi" type="date" id="pubTo" style="max-width:100%"></div>
-    </div>
-  </div>
-  <div class="l-sub" style="text-align:left;margin-bottom:10px">Отчёт публикуется в группу сразу, без дополнительного подтверждения.</div>
-  <div class="btn-row"><button class="btn btn-s" onclick="closeOv('pubOv')">Отмена</button><button class="btn btn-p" id="pubBtn" onclick="confirmPublish()">Опубликовать</button></div>
-</div>
-</div>
+<!-- PUBLISH REPORT overlay removed (reports are now sent automatically to assistant via DM) -->
 
 <!-- STAFF -->
 <div class="ov" id="staffOv">
@@ -630,7 +653,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:var
 
 <div class="ov" id="statPeriodOv"><div class="modal"><div class="hndl"></div><div class="mtitle" id="statPeriodTitle">Период статистики</div><div class="sgrid" id="statPeriodGrid" style="margin-top:8px"></div><button class="btn btn-s" onclick="closeOv('statPeriodOv')" style="margin-top:12px;width:100%">Отмена</button></div></div>
 <div class="ov" id="statsOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Личная статистика</div><div id="statsCont"></div><button class="btn btn-s backBtn" onclick="closeOv('statsOv')" style="margin-top:8px">↩</button></div></div>
-<div class="ov" id="calOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Календарь</div><div id="calCont"></div><div class="fgrow" style="margin-top:12px"><input class="fi" type="date" id="manualCalDate" style="max-width:none"><input class="fi" id="manualCalText" placeholder="Событие" style="max-width:none"></div><button class="btn btn-p" onclick="addManualCalendarDate()" style="max-width:none;margin-top:8px">Добавить дату</button><div class="divhr"></div><div class="fl">День рождения контакта</div><div class="fgrow"><input class="fi" id="bdName" placeholder="Имя" style="max-width:none"><input class="fi" type="date" id="bdDate" style="max-width:none"></div><button class="btn btn-s" onclick="addBirthdayContactUI()" style="max-width:none;margin-top:8px">Добавить день рождения</button><textarea class="fta" id="bdImport" placeholder="Импорт вручную: Имя,YYYY-MM-DD" style="max-width:none;margin-top:8px"></textarea><button class="btn btn-s" onclick="importBirthdayContactsUI()" style="max-width:none;margin-top:8px">Импортировать список</button><div class="tinyHint">Telegram не отдаёт контакты и дни рождения автоматически; добавляйте их вручную или списком.</div><div id="bdList" class="alist" style="margin-top:8px"></div><button class="btn btn-s backBtn" onclick="closeOv('calOv')" style="margin-top:8px">↩</button></div></div>
+<div class="ov" id="calOv"><div class="modal"><div class="hndl"></div><div class="mtitle">Календарь</div><div class="fgrow" style="align-items:center;justify-content:space-between;margin-bottom:8px"><button class="btn btn-s" style="max-width:40px;padding:6px" onclick="calNav(-1,0)">«</button><button class="btn btn-s" style="max-width:40px;padding:6px" onclick="calNav(0,-1)">‹</button><div id="calLbl" style="flex:1;text-align:center;font-weight:700"></div><button class="btn btn-s" style="max-width:40px;padding:6px" onclick="calNav(0,1)">›</button><button class="btn btn-s" style="max-width:40px;padding:6px" onclick="calNav(1,0)">»</button></div><div id="calCont"></div><div class="fgrow" style="margin-top:12px"><input class="fi" type="date" id="manualCalDate" style="max-width:none"><input class="fi" id="manualCalText" placeholder="Событие" style="max-width:none"></div><button class="btn btn-p" onclick="addManualCalendarDate()" style="max-width:none;margin-top:8px">Добавить дату</button><div class="divhr"></div><div class="fl">День рождения контакта</div><div class="fgrow"><input class="fi" id="bdName" placeholder="Имя" style="max-width:none"><input class="fi" type="date" id="bdDate" style="max-width:none"></div><button class="btn btn-s" onclick="addBirthdayContactUI()" style="max-width:none;margin-top:8px">Добавить день рождения</button><textarea class="fta" id="bdImport" placeholder="Импорт вручную: Имя,YYYY-MM-DD" style="max-width:none;margin-top:8px"></textarea><button class="btn btn-s" onclick="importBirthdayContactsUI()" style="max-width:none;margin-top:8px">Импортировать список</button><div class="tinyHint">Telegram не отдаёт контакты и дни рождения автоматически; добавляйте их вручную или списком.</div><div id="bdList" class="alist" style="margin-top:8px"></div><button class="btn btn-s backBtn" onclick="closeOv('calOv')" style="margin-top:8px">↩</button></div></div>
 
 <script>
 // ============================================================
@@ -654,6 +677,7 @@ let CHAT_NAME = '';
 let tasks = [], staff = [], birthdayContacts = [];
 let categories = [];     // [{id,label,color,icon,order,visible}]
 let curTab = 'today', curDate = new Date();
+let calY = new Date().getFullYear(), calM = new Date().getMonth();
 let actF = 'all', statFilter = null;
 let selTask = null;
 let fontSize = 15;
@@ -1174,8 +1198,8 @@ function goToday(){ curDate=new Date(); updDateLbl(); renderTasks(); }
 
 const UZ_HOLIDAYS=[
   ['01-01','Новый год'],['01-14','День защитников Родины'],['03-08','Международный женский день'],
-  ['03-21','Навруз'],['05-09','День памяти и почестей'],['09-01','День независимости'],
-  ['10-01','День учителей и наставников'],['12-08','День Конституции']
+  ['03-21','Навруз'],['05-09','День памяти и почестей'],['08-31','День памяти жертв репрессий'],
+  ['09-01','День независимости'],['10-01','День учителей и наставников'],['12-08','День Конституции']
 ];
 // Религиозные праздники Узбекистана имеют плавающие даты; ежегодно сверяйте их с официальным календарём.
 const UZ_FLOATING_HOLIDAYS={
@@ -1188,12 +1212,12 @@ async function addBirthdayContactUI(){
   const name=document.getElementById('bdName').value.trim(), date=document.getElementById('bdDate').value;
   if(!name||!date){showToast('Укажите имя и дату');return;}
   const r=await api('addBirthdayContact',{name,date});
-  if(r.ok){birthdayContacts.push({id:r.id,name,date}); document.getElementById('bdName').value=''; document.getElementById('bdDate').value=''; openCalendar(); showToast('День рождения добавлен');}
+  if(r.ok){birthdayContacts.push({id:r.id,name,date}); document.getElementById('bdName').value=''; document.getElementById('bdDate').value=''; renderCalendar(); showToast('День рождения добавлен');}
   else showToast(r.error||'Не удалось добавить');
 }
 async function deleteBirthdayContactUI(id){
   const r=await api('deleteBirthdayContact',{id});
-  if(r.ok){birthdayContacts=birthdayContacts.filter(x=>x.id!==id); openCalendar();}
+  if(r.ok){birthdayContacts=birthdayContacts.filter(x=>x.id!==id); renderCalendar();}
 }
 async function importBirthdayContactsUI(){
   const ta=document.getElementById('bdImport');
@@ -1206,7 +1230,7 @@ async function importBirthdayContactsUI(){
     if(r.ok){ birthdayContacts.push({id:r.id,name,date}); ok++; }
   }
   ta.value='';
-  openCalendar();
+  renderCalendar();
   showToast(ok?('Импортировано: '+ok):'Нет строк для импорта');
 }
 function renderBirthdayList(){
@@ -1216,11 +1240,20 @@ function renderBirthdayList(){
 function addManualCalendarDate(){
   const d=document.getElementById('manualCalDate').value, t=document.getElementById('manualCalText').value.trim();
   if(!d||!t){showToast('Укажите дату и событие');return;}
-  const arr=manualDates(); arr.push({date:d,title:t}); lsSet('manualDates_'+CHAT_ID,arr); openCalendar();
+  const arr=manualDates(); arr.push({date:d,title:t}); lsSet('manualDates_'+CHAT_ID,arr); renderCalendar();
+}
+function calNav(dy,dm){
+  calM+=dm; calY+=dy;
+  if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;}
+  renderCalendar();
 }
 function openCalendar(){
-  goToday();
-  const y=curDate.getFullYear(), m=curDate.getMonth();
+  const t=new Date(); calY=t.getFullYear(); calM=t.getMonth();
+  renderCalendar();
+  openOv('calOv');
+}
+function renderCalendar(){
+  const y=calY, m=calM;
   const first=new Date(y,m,1), last=new Date(y,m+1,0);
   const events={};
   UZ_HOLIDAYS.forEach(([md,title])=>{const d=`${y}-${md}`; (events[d]=events[d]||[]).push(title);});
@@ -1228,18 +1261,22 @@ function openCalendar(){
   birthdayContacts.forEach(b=>{const md=String(b.date||'').substring(5); if(md){const d=`${y}-${md}`; (events[d]=events[d]||[]).push('🎂 '+b.name);}});
   manualDates().forEach(e=>(events[e.date]=events[e.date]||[]).push(e.title));
   tasks.filter(t=>t.date).forEach(t=>{const d=dateOnly(t.date); (events[d]=events[d]||[]).push('Дедлайн: '+t.title);});
+  document.getElementById('calLbl').textContent=first.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+  const todayIso=new Date().toISOString().split('T')[0];
   let html='<div class="calendarGrid">';
   for(let i=0;i<first.getDay();i++) html+='<div></div>';
   for(let d=1;d<=last.getDate();d++){
     const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    html+=`<div class="calDay ${events[iso]?'mark':''}"><strong>${d}</strong>${events[iso]?`<div class="teamRole">${events[iso].map(esc).join('<br>')}</div>`:''}</div>`;
+    const isHoliday=!!(UZ_HOLIDAYS.concat(UZ_FLOATING_HOLIDAYS[y]||[]).find(([md])=>md===String(d).padStart(2,'0')&&y+'-'+md===iso));
+    html+=`<div class="calDay ${events[iso]?'mark':''} ${isHoliday?'holiday':''} ${iso===todayIso?'today':''}"><strong>${d}</strong>${events[iso]?`<div class="teamRole">${events[iso].map(esc).join('<br>')}</div>`:''}</div>`;
   }
   html+='</div>';
   document.getElementById('calCont').innerHTML=html;
   renderBirthdayList();
-  const todayEvents=events[new Date().toISOString().split('T')[0]];
-  if(todayEvents?.length) showToast(todayEvents.join(' · '),'top');
-  openOv('calOv');
+  if(y===new Date().getFullYear()&&m===new Date().getMonth()){
+    const todayEvents=events[todayIso];
+    if(todayEvents?.length) showToast(todayEvents.join(' · '),'top');
+  }
 }
 
 // ============================================================
@@ -1249,6 +1286,14 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
   t.classList.add('on'); curTab=t.dataset.tab; statFilter=null;
   document.querySelectorAll('.stat').forEach(s=>s.classList.remove('af'));
+  // Восстанавливаем панели (Гант/Канбан скрывают их)
+  if(curTab!=='gantt'&&curTab!=='kanban'){
+    document.getElementById('frow').style.display='';
+    document.getElementById('sortRowHeader').style.display='';
+    document.getElementById('dstrip').style.display='';
+    document.getElementById('sbar').style.display='';
+    document.getElementById('statsTable').style.display='';
+  }
   if(curTab==='staff'){ openOv('staffOv'); return; }
   renderAll();
 }));
@@ -1425,6 +1470,15 @@ function updStats(){
   const periodLbl=document.getElementById('sbarPeriodLbl');
   const base=getStatBase();
 
+  // Таблица "В очереди / В работе / Выполнено" над строкой даты
+  const stTbl=document.getElementById('statsTable');
+  if(stTbl){
+    const nQ=base.filter(t=>t.status==='todo').length;
+    const nW=base.filter(t=>t.status==='in-progress').length;
+    const nD=base.filter(t=>t.status==='done').length;
+    stTbl.innerHTML=`<tr><th>В очереди</th><th>В работе</th><th>Выполнено</th></tr><tr><td>${nQ}</td><td>${nW}</td><td>${nD}</td></tr>`;
+  }
+
   // Показываем строку периода только на вкладках all/my
   if(periodRow){
     const showPeriod=(curTab==='all'||curTab==='my');
@@ -1482,12 +1536,24 @@ function setStatPeriod(p){
   renderTasks();
 }
 
+function curHolidays(){
+  const d=curTab==='today'?curDate:new Date();
+  const y=d.getFullYear(), md=String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const list=[];
+  UZ_HOLIDAYS.forEach(([m,t])=>{if(m===md) list.push(t);});
+  (UZ_FLOATING_HOLIDAYS[y]||[]).forEach(([m,t])=>{if(m===md) list.push(t);});
+  return list;
+}
 function renderTasks(){
   if(curTab==='history'){ renderHistory(); return; }
   if(curTab==='report'){ renderReport(); return; }
+  if(curTab==='gantt'){ renderGantt(); return; }
+  if(curTab==='kanban'){ renderKanban(); return; }
   const wrap=document.getElementById('twrap');
   let f=getFiltered(); updStats();
-  if(!f.length){ wrap.innerHTML='<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
+  const hol=curHolidays();
+  const holBanner=hol.length?`<div class="holidayBanner">🎉 ${hol.map(esc).join(' · ')}</div>`:'';
+  if(!f.length){ wrap.innerHTML=holBanner+'<div class="empty"><div class="eico">📋</div><div>Задач нет</div></div>'; return; }
   // Sort by selected mode
   const mode=taskSortMode||'manual';
   if(mode==='manual'){
@@ -1505,11 +1571,16 @@ function renderTasks(){
   } else if(mode==='oldest'){
     f.sort((a,b)=>{ const od=catById(a.status).order-catById(b.status).order; if(od!==0)return od; return String(a.createdAt||'').localeCompare(String(b.createdAt||'')); });
   }
-  // Группируем задачи одной группы рядом (стабильная кластеризация внутри каждого статуса)
+  // Кластеризация: сначала по статусу, внутри — по taskGroup, чтобы заголовок статуса не дублировался
   {
-    const buckets={}, order=[];
-    f.forEach(t=>{ const k=t.status+'|'+(t.taskGroup||('__single_'+t.id)); if(!buckets[k]){ buckets[k]=[]; order.push(k); } buckets[k].push(t); });
-    f=order.flatMap(k=>buckets[k]);
+    const statusOrder=[], statusBuckets={};
+    f.forEach(t=>{
+      if(!statusBuckets[t.status]){ statusBuckets[t.status]={}; statusOrder.push(t.status); }
+      const gk=t.taskGroup||('__s_'+t.id);
+      if(!statusBuckets[t.status][gk]) statusBuckets[t.status][gk]=[];
+      statusBuckets[t.status][gk].push(t);
+    });
+    f=statusOrder.flatMap(st=>Object.values(statusBuckets[st]).flat());
   }
   const pc={high:'ph',medium:'pm',low:'pl'};
   const pt={high:'↑ 5',medium:'→ 3',low:'↓ 1'};
@@ -1532,9 +1603,10 @@ function renderTasks(){
     const cat=catById(task.status);
     const subs=task.subtasks||[], ds=subs.filter(s=>s.done).length;
     const due=dueInfo(task);
+    const dueDisabled=(task.status==='done'||task.status==='cancelled'||task.status==='blocked');
     const dep=task.dependsOn?tasks.find(x=>x.id===task.dependsOn):null;
     const open=!!task._subsOpen;
-    html+=`<div class="tc ${task.status==='done'?'tdone':''} ${due.cls} ${dep?'tc-dep':''}" data-id="${task.id}" draggable="${canEdit(ME.role)}">
+    html+=`<div class="tc ${task.status==='done'?'tdone':''} ${dueDisabled?'':(due.cls)} ${dep?'tc-dep':''}" data-id="${task.id}" draggable="${canEdit(ME.role)}">
       <div class="tm">
         <div class="dragHandle" onclick="event.stopPropagation()">☰${canEdit(ME.role)?`<div style="display:flex;gap:2px;margin-top:4px"><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',-1)">↑</button><button class="dBtn" style="width:22px;height:22px;font-size:10px" onclick="event.stopPropagation();moveTask('${task.id}',1)">↓</button></div>`:''}</div>
         <div class="tdot ${task.status==='in-progress'?'pulse-emerald':task.status==='todo'?'pulse-orange':''}" style="background:${cat.color}"></div>
@@ -1560,7 +1632,7 @@ function renderTasks(){
       ${subs.length&&open?`<div class="sbar2">${subs.map(s=>`<div class="sitem ${s.done?'sd':''}" data-tid="${task.id}" data-sid="${s.id}"><div class="schk ${s.done?'ck':''}" onclick="event.stopPropagation();togSub('${task.id}','${s.id}')">${s.done?'✓':''}</div><span>${esc(s.title)}</span></div>`).join('')}</div>`:''}
     </div>`;
   });
-  wrap.innerHTML=html;
+  wrap.innerHTML=holBanner+html;
   wrap.querySelectorAll('.tc').forEach(c=>{
     c.addEventListener('click',()=>openDetail(c.dataset.id));
     c.addEventListener('dragstart',e=>{ if(!canEdit(ME.role)) return e.preventDefault(); c.classList.add('dragging'); e.dataTransfer.setData('text/plain',c.dataset.id); });
@@ -1648,8 +1720,14 @@ function renderHistory(){
     let h=`<div class="hfrow">${periods.map(p=>`<button class="chip ${sp===p.v?'on':''}" onclick="hPer('${p.v}')">${p.l}</button>`).join('')}</div>`;
     if(!fe.length)h+='<div class="empty"><div class="eico">🔍</div><div>Нет записей</div></div>';
     fe.forEach(g=>{
+      const t=tasks.find(x=>x.id===g.id);
+      const doneEntry=g.items.slice().reverse().find(e=>/Выполнено|Завершен/i.test(e.what||''));
+      const metaBits=[];
+      if(t?.date) metaBits.push('📅 Срок: '+fmtTaskDate(t.date));
+      if(doneEntry) metaBits.push('✅ Завершено: '+doneEntry.when);
+      const metaLine=metaBits.length?`<div class="hwhen" style="margin-top:4px">${metaBits.join(' · ')}</div>`:'';
       const rows=g.items.map(e=>`<div class="hentry"><div class="hwho">${esc(e.who||'Система')}</div><div class="hwhat">${esc(e.what)}</div><div class="hwhen">${e.when||''}</div></div>`).join('');
-      h+=`<details class="hentry"><summary><strong>${esc(g.title)}</strong> <span class="tcomm">${g.items.length}</span></summary><div style="margin-top:8px">${rows}</div></details>`;
+      h+=`<details class="hentry"><summary><strong>${esc(g.title)}</strong> <span class="tcomm">${g.items.length}</span></summary>${metaLine}<div style="margin-top:8px">${rows}</div></details>`;
     });
     return h;
   }
@@ -1678,7 +1756,6 @@ function extractAssigneeChain(task){
 function renderReport(){
   const wrap=document.getElementById('twrap');
   let h=`<div style="margin-bottom:12px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
-    ${isAssistant(ME.role)?`<button class="btn btn-s" style="max-width:170px;padding:8px" onclick="openPublishUI()">📤 Опубликовать в группу</button>`:''}
     <button class="btn btn-p" style="max-width:170px;padding:8px" onclick="downloadReport()">📥 Скачать файлом</button>
   </div>`;
   h+=`<div class="sgrid" style="margin-bottom:10px">
@@ -2267,7 +2344,7 @@ function renderPersonalStats(){
       <div class="sopt ${statsPeriod==='month'?'sel':''}" onclick="selectStatsPeriod('month')"><span class="si">🗓️</span>Месяц</div>
       <div class="sopt ${statsPeriod==='all'?'sel':''}" onclick="selectStatsPeriod('all')"><span class="si">♾️</span>Всё время</div>
     </div>` : '';
-  const pubBtn = isAssistant(ME.role) ? `<button class="btn btn-p" style="max-width:none;margin-top:8px" onclick="publishPersonalStats('${jsArg(name)}')">📤 Опубликовать в группу</button>` : '';
+  const pubBtn = '';
   const dmBtn = isMe ? `<button class="btn btn-s" style="max-width:none;margin-top:8px" onclick="sendStatsDM()">📩 Отправить себе в ЛС</button>` : '';
   document.getElementById('statsCont').innerHTML=`<div class="teamTable"><div class="teamRow"><div><div class="aname">${esc(name)}</div><div class="teamRole">${roleTxt}</div></div><strong>${created}</strong></div>${rows}</div>${periodBar}${pubBtn}${dmBtn}`;
 }
@@ -2409,8 +2486,136 @@ function closeOv(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
 // ============================================================
-// HELPERS
+// GANTT
 // ============================================================
+let ganttDays = 14;
+function renderGantt(){
+  const wrap = document.getElementById('twrap');
+  // Скрываем ненужные панели
+  document.getElementById('frow').style.display='none';
+  document.getElementById('sortRowHeader').style.display='none';
+  document.getElementById('sortRow').style.display='none';
+  document.getElementById('dstrip').style.display='none';
+  document.getElementById('sbar').style.display='none';
+  document.getElementById('sbarPeriodRow').style.display='none';
+  document.getElementById('statsTable').style.display='none';
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = ganttDays;
+  // Начало: 2 дня назад
+  const startD = new Date(today); startD.setDate(startD.getDate()-2);
+
+  // Все задачи с датой или без
+  let tasks2 = tasks.filter(t=>t.status!=='done'||t.date);
+  if(!tasks2.length){ wrap.innerHTML='<div class="gantt-empty">📊 Нет задач для отображения</div>'; return; }
+
+  // Заголовок
+  let cols = '';
+  for(let i=0;i<days;i++){
+    const d=new Date(startD); d.setDate(d.getDate()+i);
+    const isT=(d.getTime()===today.getTime());
+    const label=d.getDate()+'/'+(d.getMonth()+1);
+    cols+=`<th class="${isT?'today-col':''}">${label}</th>`;
+  }
+
+  // Строки задач
+  let rows='';
+  tasks2.forEach(t=>{
+    const cat=catById(t.status);
+    const color=cat.color||'var(--acc)';
+    const name=esc(t.title||'—');
+    // Дата начала = createdAt или дедлайн - 1 день
+    let tStart=null,tEnd=null;
+    if(t.date){ tEnd=new Date(t.date); tEnd.setHours(0,0,0,0); }
+    if(t.createdAt){ tStart=new Date(t.createdAt.split('T')[0]||t.createdAt); tStart.setHours(0,0,0,0); }
+    if(!tStart && tEnd){ tStart=new Date(tEnd); tStart.setDate(tStart.getDate()-1); }
+    if(!tEnd && tStart){ tEnd=new Date(tStart); tEnd.setDate(tEnd.getDate()+1); }
+    if(!tStart){ tStart=new Date(today); tEnd=new Date(today); tEnd.setDate(tEnd.getDate()+1); }
+
+    let cells='';
+    // Позиция бара в пикселях относительно сетки
+    // Ищем пересечение [tStart,tEnd] с [startD, startD+days]
+    const ganttStart=new Date(startD);
+    const ganttEnd=new Date(startD); ganttEnd.setDate(ganttEnd.getDate()+days);
+    const barStart=Math.max(0,(tStart-ganttStart)/(86400000));
+    const barEnd=Math.min(days,(tEnd-ganttStart)/(86400000)+1);
+    const barW=barEnd-barStart;
+
+    if(barW>0){
+      // Строка: имя + одна длинная ячейка для бара
+      rows+=`<tr class="gantt-row" onclick="openTask('${jsArg(t.id)}')">
+        <td class="gantt-name" title="${name}">${name}</td>
+        <td colspan="${days}" style="position:relative;height:28px;padding:0">
+          <div class="gantt-bar" style="left:${barStart*28}px;width:${barW*28}px;background:${color}" title="${name}">
+            <span>${name}</span>
+          </div>
+        </td>
+      </tr>`;
+    } else {
+      rows+=`<tr class="gantt-row" onclick="openTask('${jsArg(t.id)}')">
+        <td class="gantt-name" title="${name}">${name}</td>
+        <td colspan="${days}"><div style="text-align:center;color:var(--muted);font-size:11px">вне диапазона</div></td>
+      </tr>`;
+    }
+  });
+
+  wrap.innerHTML=`
+    <div class="gantt-wrap">
+      <div class="gantt-header">
+        <span style="font-size:13px;font-weight:700;color:var(--txt)">📊 Диаграмма Ганта</span>
+        <select onchange="ganttDays=+this.value;renderGantt()">
+          <option value="7" ${ganttDays===7?'selected':''}>7 дней</option>
+          <option value="14" ${ganttDays===14?'selected':''}>14 дней</option>
+          <option value="30" ${ganttDays===30?'selected':''}>30 дней</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="gantt-table">
+          <thead><tr><th style="min-width:100px;text-align:left;padding:0 8px">Задача</th>${cols}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// KANBAN
+// ============================================================
+function renderKanban(){
+  const wrap = document.getElementById('twrap');
+  document.getElementById('frow').style.display='none';
+  document.getElementById('sortRowHeader').style.display='none';
+  document.getElementById('sortRow').style.display='none';
+  document.getElementById('dstrip').style.display='none';
+  document.getElementById('sbar').style.display='none';
+  document.getElementById('sbarPeriodRow').style.display='none';
+  document.getElementById('statsTable').style.display='none';
+
+  const today=new Date().toISOString().split('T')[0];
+  const cols=categories.map(cat=>{
+    const tlist=tasks.filter(t=>t.status===cat.id);
+    const cards=tlist.map(t=>{
+      const isOver=t.date&&t.date<today&&t.status!=='done';
+      const deadlineBadge=t.date?`<span class="kb-badge deadline${isOver?' over':''}">${isOver?'⚠ ':'📅'}${t.date}</span>`:'';
+      const assBadge=t.assignee?`<span class="kb-badge ass">👤 ${esc(t.assignee)}</span>`:'';
+      return `<div class="kb-card" style="border-left-color:${cat.color}" onclick="openTask('${jsArg(t.id)}')">
+        <div class="kb-card-title">${esc(t.title||'—')}</div>
+        ${t.sub?`<div class="kb-card-sub">${esc(t.sub)}</div>`:''}
+        <div class="kb-card-meta">${deadlineBadge}${assBadge}</div>
+      </div>`;
+    }).join('');
+    return `<div class="kb-col">
+      <div class="kb-col-head" style="color:${cat.color}">
+        ${cat.icon||''} ${esc(cat.label)} <span class="kbcount">${tlist.length}</span>
+      </div>
+      ${cards||`<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px">Пусто</div>`}
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML=`<div class="kanban-wrap">${cols}</div>`;
+}
+
+
 function showToast(m,pos){ const t=document.getElementById('toast'); t.textContent=m; t.classList.toggle('top',pos==='top'); t.classList.add('show'); clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show','top'),pos==='top'?5000:2500); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function jsArg(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '); }
@@ -2427,7 +2632,3 @@ init();
 </script>
 </body>
 </html>
-
-
-
-
