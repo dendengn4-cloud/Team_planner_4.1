@@ -1666,15 +1666,27 @@ async function moveTask(id,dir){
 // ============================================================
 // HISTORY VIEW
 // ============================================================
-function renderHistory(){
+async function renderHistory(){
   const wrap=document.getElementById('twrap');
+  wrap.innerHTML='<div class="ld"><div class="sp"></div><span>Загружаем историю...</span></div>';
+  // Подгружаем архивные задачи
+  let archived=[];
+  try{
+    const r=await api('getArchive',{limit:500});
+    if(r.ok) archived=r.tasks||[];
+  }catch(e){}
+  // Объединяем активные задачи + архивные (без дублей)
+  const activeIds=new Set(tasks.map(t=>t.id));
+  const allTasks=[...tasks, ...archived.filter(a=>!activeIds.has(a.id))];
   let groups=[];
-  tasks.forEach(t=>groups.push({id:t.id,title:t.title,items:[...(t.history||[])]}));
+  allTasks.forEach(t=>groups.push({id:t.id,title:t.title,archived:!!t.archivedAt,archivedAt:t.archivedAt||'',items:[...(t.history||[])]}));
   const periods=[{v:'day',l:'День'},{v:'week',l:'Неделя'},{v:'month',l:'Месяц'},{v:'quarter',l:'Квартал'},{v:'year',l:'Год'},{v:'all',l:'Всё'}];
   let sp=lsGet('hperiod')||'day';
   const now=new Date();
   function inP(w){
+    if(!w) return false;
     const d=new Date(w.replace(/(\d{2})\.(\d{2})\.(\d{4})/,'$3-$2-$1'));
+    if(isNaN(d)) return false;
     if(sp==='all')return true;
     if(sp==='day')return d.toDateString()===curDate.toDateString();
     if(sp==='week'){const wk=new Date(now);wk.setDate(now.getDate()-7);return d>=wk;}
@@ -1686,16 +1698,19 @@ function renderHistory(){
   function build(){
     const fe=groups.map(g=>({...g,items:g.items.filter(e=>inP(e.when))})).filter(g=>g.items.length);
     let h=`<div class="hfrow">${periods.map(p=>`<button class="chip ${sp===p.v?'on':''}" onclick="hPer('${p.v}')">${p.l}</button>`).join('')}</div>`;
+    h+=`<div style="font-size:11px;color:var(--muted);padding:0 0 8px 2px">Активных: ${tasks.length} · Архивных: ${archived.length}</div>`;
     if(!fe.length)h+='<div class="empty"><div class="eico">🔍</div><div>Нет записей</div></div>';
     fe.forEach(g=>{
-      const t=tasks.find(x=>x.id===g.id);
+      const t=allTasks.find(x=>x.id===g.id);
       const doneEntry=g.items.slice().reverse().find(e=>/Выполнено|Завершен/i.test(e.what||''));
       const metaBits=[];
       if(t?.date) metaBits.push('📅 Срок: '+fmtTaskDate(t.date));
       if(doneEntry) metaBits.push('✅ Завершено: '+doneEntry.when);
+      if(g.archived) metaBits.push('🗂 Архив: '+g.archivedAt);
       const metaLine=metaBits.length?`<div class="hwhen" style="margin-top:4px">${metaBits.join(' · ')}</div>`:'';
       const rows=g.items.map(e=>`<div class="hentry"><div class="hwho">${esc(e.who||'Система')}</div><div class="hwhat">${esc(e.what)}</div><div class="hwhen">${e.when||''}</div></div>`).join('');
-      h+=`<details class="hentry"><summary><strong>${esc(g.title)}</strong> <span class="tcomm">${g.items.length}</span></summary>${metaLine}<div style="margin-top:8px">${rows}</div></details>`;
+      const archBadge=g.archived?` <span style="font-size:9px;background:var(--surf2);border-radius:6px;padding:1px 5px;color:var(--muted)">архив</span>`:'';
+      h+=`<details class="hentry"><summary><strong>${esc(g.title)}</strong>${archBadge} <span class="tcomm">${g.items.length}</span></summary>${metaLine}<div style="margin-top:8px">${rows}</div></details>`;
     });
     return h;
   }
@@ -2472,4 +2487,3 @@ init();
 </script>
 </body>
 </html>
-
